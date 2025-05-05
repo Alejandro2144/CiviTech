@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from ..models.citizen import Citizen
 from ..schemas.citizen import CitizenCreate
 from ..utils.govcarpeta_client import GovCarpetaClient
-from ..utils.security import hash_password
+from ..utils.security import hash_password, verify_password
 
 class CitizenService:
 
@@ -50,5 +50,19 @@ class CitizenService:
         self.db.add(citizen)
         self.db.commit()
         self.db.refresh(citizen)
+
+        return citizen
+
+    def authenticate_citizen(self, email: str, password: str):
+        """
+        Verifica las credenciales del ciudadano
+        """
+        citizen = self.db.query(Citizen).filter(Citizen.email == email).first()
+
+        if not citizen:
+            return None
+
+        if not verify_password(password, citizen.hashed_password):
+            return None
 
         return citizen

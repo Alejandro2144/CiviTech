@@ -14,3 +14,8 @@ class CitizenResponse(CitizenBase):
 
     class Config:
         orm_mode = True
+
+class CitizenLogin(BaseModel):
+    email: EmailStr
+    password: str
+
