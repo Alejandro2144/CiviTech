@@ -8,7 +8,7 @@ from models.citizen import Citizen
 
 router = APIRouter(prefix="/citizens", tags=["Citizens"])
 
-@router.post("/", response_model=CitizenResponse)
+@router.post("/register", response_model=CitizenResponse)
 async def register_citizen(citizen: CitizenCreate, db: Session = Depends(get_db)):
 
     service = CitizenService(db)

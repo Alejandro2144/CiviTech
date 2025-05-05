@@ -22,6 +22,8 @@ services:
     depends_on:
       - autenticacion
     restart: unless-stopped
+    volumes:
+      - ./ciudadanos/data:/app/data
 
 networks:
   default:
