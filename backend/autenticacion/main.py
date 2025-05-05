@@ -1,14 +1,6 @@
 from fastapi import FastAPI
-from app.routers import example
+from routers import token
 
-app = FastAPI(
-    title="CiviTech",
-    description="This project is intended to the Civitech project for advanced software architectures.",
-    version="0.1.0",
-)
+app = FastAPI(title="Token Microservice - CiviTech")
 
-app.include_router(example.router)
-
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to the Civitech FastAPI project!"}
+app.include_router(token.router)

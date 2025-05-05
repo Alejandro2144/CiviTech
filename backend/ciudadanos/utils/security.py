@@ -1,13 +1,9 @@
-# # security.py
-# from passlib.context import CryptContext
+from passlib.context import CryptContext
 
-# pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# def verifyPassword(plain_password, hashed_password):
-#     return pwd_context.verify(plain_password, hashed_password)
+def hash_password(password: str):
+    return pwd_context.hash(password)
 
-# def getPasswordHash(password):
-#     return pwd_context.hash(password)
-
-
-''' Use whatever may be needed from this code.'''
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)

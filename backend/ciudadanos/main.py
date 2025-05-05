@@ -1,14 +1,10 @@
 from fastapi import FastAPI
-from app.routers import example
+from routers import citizen
+from config.db import Base, engine
 
-app = FastAPI(
-    title="CiviTech",
-    description="This project is intended to the Civitech project for advanced software architectures.",
-    version="0.1.0",
-)
+app = FastAPI(title="Ciudadanos - CiviTech")
 
-app.include_router(example.router)
+# Crear tablas automáticamente (solo en dev, luego usar migraciones)
+Base.metadata.create_all(bind=engine)
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to the Civitech FastAPI project!"}
+app.include_router(citizen.router)
