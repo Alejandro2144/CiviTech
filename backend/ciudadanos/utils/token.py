@@ -1,21 +1,43 @@
 import os
-import httpx
 from dotenv import load_dotenv
+from fastapi import Request, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import jwt, JWTError
 
 load_dotenv()
 
-TOKEN_MICROSERVICE_URL = os.getenv("TOKEN_MICROSERVICE_URL")
+TOKEN_SECRET_KEY = os.getenv("SECRET_KEY")
+TOKEN_ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
-async def get_token(citizen_id: int, email: str) -> str:
-    payload = {
-        "id": citizen_id,
-        "email": email
-    }
+class JWTBearer(HTTPBearer):
+    """
+    Valida el token JWT en las rutas protegidas
+    """
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(TOKEN_MICROSERVICE_URL, json=payload)
+    def __init__(self, auto_error: bool = True):
+        super(JWTBearer, self).__init__(auto_error=auto_error)
 
-        if response.status_code == 200:
-            return response.json()["access_token"]
+    async def __call__(self, request: Request):
+        credentials: HTTPAuthorizationCredentials = await super(JWTBearer, self).__call__(request)
+        if credentials:
+            if not credentials.scheme == "Bearer":
+                raise HTTPException(status_code=403, detail="Formato de token inválido")
+            if not self.verify_jwt(credentials.credentials):
+                raise HTTPException(status_code=403, detail="Token inválido o expirado")
+            return credentials.credentials
         else:
-            raise Exception("Error al generar token")
+            raise HTTPException(status_code=403, detail="Token faltante")
+
+    def verify_jwt(self, jwtoken: str) -> bool:
+        try:
+            payload = jwt.decode(jwtoken, TOKEN_SECRET_KEY, algorithms=[TOKEN_ALGORITHM])
+            return True
+        except JWTError:
+            return False
+
+def decode_token(token: str):
+    try:
+        payload = jwt.decode(token, TOKEN_SECRET_KEY, algorithms=[TOKEN_ALGORITHM])
+        return payload
+    except JWTError:
+        raise HTTPException(status_code=403, detail="Token inválido o expirado")

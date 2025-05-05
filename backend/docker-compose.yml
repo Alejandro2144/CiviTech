@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  autenticacion:
+    build:
+      context: ./autenticacion
+    container_name: autenticacion
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./autenticacion/.env
+    restart: unless-stopped
+
+  ciudadanos:
+    build:
+      context: ./ciudadanos
+    container_name: ciudadanos
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./ciudadanos/.env
+    depends_on:
+      - autenticacion
+    restart: unless-stopped
+
+networks:
+  default:
+    driver: bridge

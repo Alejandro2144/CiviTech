@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from autenticacion.routers import token
+from routers import token
 
 app = FastAPI(title="Token Microservice - CiviTech")
 

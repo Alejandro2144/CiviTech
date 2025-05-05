@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from ciudadanos.routers import citizen
-from ciudadanos.config.db import Base, engine
+from routers import citizen
+from config.db import Base, engine
 
 app = FastAPI(title="Ciudadanos - CiviTech")
 

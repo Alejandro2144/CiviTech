@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
-from ..schemas.token import TokenRequest, TokenResponse, TokenPayload
-from ..utils.token import create_access_token, decode_token, JWTBearer
+from schemas.token import TokenRequest, TokenResponse, TokenPayload
+from utils.token import create_access_token, decode_token, JWTBearer
 
 router = APIRouter(prefix="/token", tags=["Token"])
 

@@ -1,5 +1,4 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
 
 class CitizenBase(BaseModel):
     id: int
@@ -12,10 +11,16 @@ class CitizenCreate(CitizenBase):
 
 class CitizenResponse(CitizenBase):
     civi_email: EmailStr
-    access_token: Optional[str] = None
+    access_token: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class CitizenProfileResponse(CitizenBase):
+    civi_email: EmailStr
+
+    class Config:
+        from_attributes = True
 
 class CitizenLogin(BaseModel):
     email: EmailStr
