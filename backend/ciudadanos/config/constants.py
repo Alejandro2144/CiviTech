@@ -1,16 +1,8 @@
-"""
-Este módulo contiene constantes utilizadas para la configuración y operación
-de la integración con el servicio GovCarpeta.
-"""
+import os
+from dotenv import load_dotenv
 
-# URL base para interactuar con las APIs de GovCarpeta.
-GOVCARPETA_BASE_URL = "https://govcarpeta-apis-4905ff3c005b.herokuapp.com"
+load_dotenv()
 
-# Identificador único del operador registrado en GovCarpeta.
-GOVCARPETA_OPERATOR_ID = "681815701549090015c0798b"
-
-# Nombre del operador registrado en GovCarpeta.
-GOVCARPETA_OPERATOR_NAME = "Operador CiviTech Pruebas"
-
-
-
+GOVCARPETA_BASE_URL = os.getenv("GOVCARPETA_BASE_URL")
+GOVCARPETA_OPERATOR_ID = os.getenv("GOVCARPETA_OPERATOR_ID")
+GOVCARPETA_OPERATOR_NAME = os.getenv("GOVCARPETA_OPERATOR_NAME")
