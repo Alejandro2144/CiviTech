@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from schemas.citizen import CitizenCreate, CitizenResponse, CitizenLogin, CitizenProfileResponse
 from services.citizen_service import CitizenService
 from utils.dependencies import get_current_citizen
+
 from config.db import get_db
 from models.citizen import Citizen
 
@@ -46,4 +47,24 @@ async def login(citizen_login: CitizenLogin, db: Session = Depends(get_db)):
 
 @router.get("/profile", response_model=CitizenProfileResponse)
 async def read_profile(current_citizen: Citizen = Depends(get_current_citizen)):
+    """
+    Obtener el perfil del ciudadano autenticado.
+    """
     return current_citizen
+
+@router.delete("/me", status_code=204)
+async def delete_my_account(current_citizen: Citizen = Depends(get_current_citizen), db: Session = Depends(get_db)):
+    """
+    Elimina al ciudadano autenticado tanto localmente como en GovCarpeta.
+    """
+    service = CitizenService(db)
+
+    try:
+        await service.delete_citizen(current_citizen.id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return
+
+
+

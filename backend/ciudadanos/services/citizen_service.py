@@ -80,3 +80,18 @@ class CitizenService:
         access_token = await get_token(citizen.id, citizen.email)
 
         return citizen, access_token
+    
+    async def delete_citizen(self, citizen_id: int):
+        """Elimina un ciudadano localmente y en GovCarpeta."""
+        citizen = self.db.query(Citizen).filter(Citizen.id == citizen_id).first()
+        if not citizen:
+            raise Exception("Ciudadano no encontrado")
+
+        # Desvincular en GovCarpeta
+        success = await GovCarpetaClient.unregister_citizen(citizen.id)
+        if not success:
+            raise Exception("No se pudo desligar al ciudadano en GovCarpeta")
+
+        # Borrar de la base local
+        self.db.delete(citizen)
+        self.db.commit()

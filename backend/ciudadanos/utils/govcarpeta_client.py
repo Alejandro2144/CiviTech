@@ -39,3 +39,21 @@ class GovCarpetaClient:
                 return True
             else:
                 return False
+
+    @staticmethod
+    async def unregister_citizen(citizen_id: str) -> bool:
+        """Desvincula un ciudadano en GovCarpeta."""
+        payload = {
+            "id": citizen_id,
+            "operatorId": GOVCARPETA_OPERATOR_ID,
+            "operatorName": GOVCARPETA_OPERATOR_NAME
+        }
+
+        async with httpx.AsyncClient() as client:
+            response = await client.request(
+                "DELETE", 
+                f"{GOVCARPETA_BASE_URL}/apis/unregisterCitizen",
+                json=payload
+            )
+            return response.status_code in (200, 201, 204)
+
