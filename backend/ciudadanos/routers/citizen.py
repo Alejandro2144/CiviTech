@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from schemas.citizen import CitizenCreate, CitizenResponse, CitizenLogin, CitizenProfileResponse
 from services.citizen_service import CitizenService
 from utils.dependencies import get_current_citizen
-
 from config.db import get_db
 from models.citizen import Citizen
 
