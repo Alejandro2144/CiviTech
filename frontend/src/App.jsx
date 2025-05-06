@@ -1,10 +1,24 @@
-import Layout from '@/components/layout/Layout'
+import Navbar from '@/components/layout/Navbar'
+import Footer from '@/components/layout/Footer'
 import AppRoutes from '@/routes/AppRoutes'
 
-export default function App() {
+function App() {
   return (
-    <Layout>
-      <AppRoutes />
-    </Layout>
+    <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
+      
+      {/* Navbar */}
+      <Navbar />
+
+      {/* Contenido */}
+      <main className="flex-grow pt-24 pb-24 animate-fade-in">
+        <AppRoutes />
+      </main>
+
+      {/* Footer */}
+      <Footer />
+      
+    </div>
   )
 }
+
+export default App

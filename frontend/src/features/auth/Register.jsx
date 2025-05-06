@@ -1,42 +1,101 @@
 import { useState } from 'react'
+import { registerCitizen } from '@/features/auth/authService'
 import { useNavigate } from 'react-router-dom'
-import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
-import { registerCitizen } from './authService'
 import { useAuth } from '@/context/AuthContext'
 
 export default function Register() {
-  const [form, setForm] = useState({ id: '', name: '', address: '', email: '', password: '' })
+  const [formData, setFormData] = useState({
+    id: '',
+    name: '',
+    address: '',
+    email: '',
+    password: '',
+  })
+  const [error, setError] = useState('')
   const navigate = useNavigate()
   const { login } = useAuth()
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-  }
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
     try {
-      const user = await registerCitizen(form)
-      login(user.access_token)
-      navigate('/welcome', { state: { token: user.access_token } })
+      const res = await registerCitizen(formData)
+
+      login(res.access_token)
+
+      navigate('/welcome', { state: { token: res.access_token } })
     } catch (err) {
-      alert('Error al registrar')
+      setError(err.message)
     }
   }
 
   return (
-    <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow">
-      <h1 className="text-2xl font-bold mb-4 text-center">Registro de Ciudadano</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input label="ID" name="id" value={form.id} onChange={handleChange} />
-        <Input label="Nombre" name="name" value={form.name} onChange={handleChange} />
-        <Input label="Dirección" name="address" value={form.address} onChange={handleChange} />
-        <Input label="Email" name="email" type="email" value={form.email} onChange={handleChange} />
-        <Input label="Contraseña" name="password" type="password" value={form.password} onChange={handleChange} />
-        <Button type="submit">Registrar</Button>
-      </form>
+    <div className="min-h-screen flex items-center justify-center bg-neutral-950 animate-fade-in">
+      <div className="bg-neutral-900 p-8 rounded-xl shadow-lg shadow-indigo-800/20 max-w-md w-full space-y-6">
+        <h1 className="text-white text-3xl font-bold text-center">Registro</h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
+
+          <input
+            type="text"
+            name="id"
+            placeholder="Cédula de Ciudadanía"
+            value={formData.id}
+            onChange={handleChange}
+            className="w-full bg-neutral-800 text-white placeholder-gray-400 border border-neutral-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+            required
+          />
+
+          <input
+            type="text"
+            name="name"
+            placeholder="Nombre"
+            value={formData.name}
+            onChange={handleChange}
+            className="w-full bg-neutral-800 text-white placeholder-gray-400 border border-neutral-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+            required
+          />
+
+          <input
+            type="text"
+            name="address"
+            placeholder="Dirección"
+            value={formData.address}
+            onChange={handleChange}
+            className="w-full bg-neutral-800 text-white placeholder-gray-400 border border-neutral-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+            required
+          />
+
+          <input
+            type="email"
+            name="email"
+            placeholder="Correo Electrónico"
+            value={formData.email}
+            onChange={handleChange}
+            className="w-full bg-neutral-800 text-white placeholder-gray-400 border border-neutral-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+            required
+          />
+
+          <input
+            type="password"
+            name="password"
+            placeholder="Contraseña"
+            value={formData.password}
+            onChange={handleChange}
+            className="w-full bg-neutral-800 text-white placeholder-gray-400 border border-neutral-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
+            required
+          />
+
+          <button
+            type="submit"
+            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg transition duration-200"
+          >
+            Registrarme
+          </button>
+
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+        </form>
+      </div>
     </div>
   )
 }

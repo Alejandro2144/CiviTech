@@ -1,94 +1,139 @@
 import { useState } from 'react'
-import { getProfileWithToken, deleteProfile } from '@/features/auth/authService'
+import { getProfile, deleteProfile } from '@/features/auth/authService'
 import { useAuth } from '@/context/AuthContext'
+import { useNavigate } from 'react-router-dom'
+import Toast from '@/components/ui/Toast'
 
 export default function Profile() {
-  const [tokenInput, setTokenInput] = useState('')
-  const [user, setUser] = useState(null)
-  const [error, setError] = useState('')
   const { logout } = useAuth()
+  const [tokenInput, setTokenInput] = useState('')
+  const [profile, setProfile] = useState(null)
+  const [error, setError] = useState('')
+  const [showToast, setShowToast] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  const navigate = useNavigate()
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-
-    try {
-      const data = await getProfileWithToken(tokenInput)
-      setUser(data)
-      setError('')
-    } catch (err) {
-      setError('Token inválido o expirado.')
-    }
-  }
-
-  const handleDelete = async () => {
-    if (!window.confirm('¿Estás seguro que deseas eliminar tu perfil? Esta acción no se puede deshacer.')) {
+  const handleFetchProfile = async () => {
+    if (!tokenInput) {
+      setError('Debes pegar tu token para ver tu perfil.')
       return
     }
 
     try {
-      await deleteProfile(tokenInput)
-      alert('Perfil eliminado exitosamente.')
-
-      // Limpiar todo y salir
-      logout()
-      window.location.href = '/'
+      const res = await getProfile(tokenInput)
+      setProfile(res)
+      setError('')
     } catch (err) {
-      alert('Error al eliminar perfil.')
+      setError(err.message)
     }
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-8 rounded-lg shadow max-w-md w-full space-y-6">
-          <h1 className="text-2xl font-bold text-center">Acceder al Perfil</h1>
+  const confirmDelete = () => {
+    setShowConfirm(true)
+  }
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm mb-1">Pega tu token</label>
-              <input
-                type="text"
-                value={tokenInput}
-                onChange={(e) => setTokenInput(e.target.value)}
-                className="w-full border rounded px-3 py-2"
-                placeholder="Token"
-                required
-              />
-            </div>
+  const handleDelete = async () => {
+    try {
+      await deleteProfile(tokenInput)
+      logout()
+      setShowToast(true)
+      setShowConfirm(false)
 
-            <button
-              type="submit"
-              className="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition"
-            >
-              Ver perfil
-            </button>
-
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-          </form>
-        </div>
-      </div>
-    )
+      setTimeout(() => {
+        navigate('/')
+      }, 2000)
+    } catch (err) {
+      setError(err.message)
+      setShowConfirm(false)
+    }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-8 rounded-lg shadow max-w-md w-full space-y-6">
-        <h1 className="text-2xl font-bold text-center">Mi Perfil</h1>
-        
-        <ul className="space-y-2 text-sm">
-          <li><strong>ID:</strong> {user.id}</li>
-          <li><strong>Nombre:</strong> {user.name}</li>
-          <li><strong>Dirección:</strong> {user.address}</li>
-          <li><strong>Email:</strong> {user.email}</li>
-          <li><strong>Civi-Email:</strong> {user.civi_email}</li>
-        </ul>
+    <div className="min-h-screen flex items-center justify-center bg-neutral-950 animate-fade-in">
+      <div className="bg-neutral-900 p-12 rounded-2xl shadow-2xl shadow-indigo-800/30 max-w-4xl w-full space-y-10 text-white">
 
-        <button
-          onClick={handleDelete}
-          className="w-full bg-red-500 text-white py-2 rounded hover:bg-red-600 transition"
-        >
-          Eliminar perfil
-        </button>
+        <h1 className="text-4xl font-bold text-center text-indigo-400">Perfil</h1>
+
+        {!profile && (
+          <>
+            <textarea
+              placeholder="Pega tu token aquí"
+              value={tokenInput}
+              onChange={(e) => setTokenInput(e.target.value)}
+              className="w-full bg-neutral-800 text-white border border-neutral-700 rounded-lg p-4 text-lg"
+              rows="4"
+            />
+
+            <button
+              onClick={handleFetchProfile}
+              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-lg text-lg transition"
+            >
+              Consultar perfil
+            </button>
+          </>
+        )}
+
+        {error && <p className="text-red-500 text-lg text-center">{error}</p>}
+
+        {profile && (
+          <div className="space-y-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <p>
+                <span className="text-indigo-400 font-semibold">Cédula de Ciudadanía:</span>{' '}
+                <span className="text-white text-lg">{profile.id}</span>
+              </p>
+              <p>
+                <span className="text-indigo-400 font-semibold">Nombre:</span>{' '}
+                <span className="text-white text-lg">{profile.name}</span>
+              </p>
+              <p>
+                <span className="text-indigo-400 font-semibold">Dirección:</span>{' '}
+                <span className="text-white text-lg">{profile.address}</span>
+              </p>
+              <p>
+                <span className="text-indigo-400 font-semibold">Correo electrónico:</span>{' '}
+                <span className="text-white text-lg">{profile.email}</span>
+              </p>
+              <p>
+                <span className="text-indigo-400 font-semibold">Correo CiviTech:</span>{' '}
+                <span className="text-white text-lg">{profile.civi_email}</span>
+              </p>
+            </div>
+
+            <button
+              onClick={confirmDelete}
+              className="w-full bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg text-lg transition"
+            >
+              Eliminar cuenta
+            </button>
+          </div>
+        )}
+
+        {showToast && <Toast message="Cuenta eliminada exitosamente." onClose={() => setShowToast(false)} />}
+
+        {/* Modal de confirmación */}
+        {showConfirm && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+            <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-8 space-y-6 max-w-md w-full text-white">
+              <h2 className="text-2xl font-bold text-center text-red-400">¿Estás seguro?</h2>
+              <p className="text-gray-400 text-center">Esta acción eliminará tu cuenta permanentemente.</p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={handleDelete}
+                  className="bg-red-600 hover:bg-red-500 text-white py-2 px-6 rounded-lg transition"
+                >
+                  Sí, eliminar
+                </button>
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  className="bg-neutral-700 hover:bg-neutral-600 text-white py-2 px-6 rounded-lg transition"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

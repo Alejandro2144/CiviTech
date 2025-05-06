@@ -1,0 +1,39 @@
+services:
+  autenticacion:
+    build:
+      context: ./backend/autenticacion
+    container_name: autenticacion
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/autenticacion/.env
+    restart: unless-stopped
+
+  ciudadanos:
+    build:
+      context: ./backend/ciudadanos
+    container_name: ciudadanos
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./backend/ciudadanos/.env
+    depends_on:
+      - autenticacion
+    restart: unless-stopped
+    volumes:
+      - ./backend/ciudadanos/data:/app/data
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend
+    ports:
+      - "5173:5173"
+    restart: unless-stopped
+    depends_on:
+      - autenticacion
+      - ciudadanos
+
+networks:
+  default:
+    driver: bridge
