@@ -11,7 +11,7 @@ This project is intended to the Civitech project for advanced software architect
 
 2. Start the server:
     ```
-    uvicorn app.main:app --reload
+    uvicorn main:app --reload
     ```
 
 Access the API documentation at: [http://localhost:8000/docs](http://localhost:8000/docs)

@@ -1,2 +1,4 @@
 fastapi
 uvicorn
+minio==7.2.15
+python-multipart
