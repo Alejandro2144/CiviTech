@@ -3,6 +3,7 @@ from fastapi import APIRouter, UploadFile, File, Form
 from typing import Optional
 from schemas.document_schema import DocumentMetadata
 from services.document_service import upload_document
+from services.document_service import list_documents_by_citizen
 
 router = APIRouter(
     prefix="/documents",
@@ -18,6 +19,9 @@ async def upload_document_endpoint(
     isCertified: Optional[bool] = Form(False),
     accessControlList: Optional[str] = Form(None)  # Recibimos como texto (JSON string)
 ):
+    """
+    Sube un documento a GovCarpeta y lo autentica.
+    """
     # Leer el archivo
     file_content = await file.read()
 
@@ -42,3 +46,13 @@ async def upload_document_endpoint(
     response = await upload_document(file_content, file.filename, metadata)
 
     return response
+
+@router.get("/list/{idCitizen}")
+async def list_documents(idCitizen: str):
+    """
+    Lista los documentos pertenecientes a un ciudadano específico.
+    """
+    documents = await list_documents_by_citizen(idCitizen)
+    if not documents:
+        return {"message": "No tienes documentos cargados."}
+    return {"documents": documents}

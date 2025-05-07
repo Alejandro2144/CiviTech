@@ -47,7 +47,7 @@ async def upload_document(file_data: bytes, original_filename: str, metadata: Do
             "x-amz-meta-documentTitle": metadata.documentTitle,
             "x-amz-meta-documentType": metadata.documentType,
             "x-amz-meta-uploadDate": metadata.uploadDate.isoformat(),
-            "x-amz-meta-isCertified": str(metadata.isCertified),
+            "x-amz-meta-isCertified": str(metadata.isCertified).lower(),
             "x-amz-meta-authenticationStatus": metadata.authenticationStatus,
             "x-amz-meta-accessControlList": ",".join(metadata.accessControlList or [])
         }
@@ -70,3 +70,36 @@ async def upload_document(file_data: bytes, original_filename: str, metadata: Do
         "message": "Documento cargado y autenticado correctamente.",
         "metadata": serializable_metadata
     }
+
+async def list_documents_by_citizen(idCitizen: str):
+    client = get_minio_client()
+
+    if not client.bucket_exists(bucket_name):
+        return []
+
+    found_documents = []
+
+    # Listar todos los objetos en el bucket
+    objects = client.list_objects(bucket_name, recursive=True)
+
+    for obj in objects:
+        # Para cada objeto, obtener su metadata
+        try:
+            info = client.stat_object(bucket_name, obj.object_name)
+            metadata = info.metadata
+
+            if metadata.get("x-amz-meta-idCitizen") == idCitizen:
+                # Construir respuesta parcial
+                document_info = {
+                    "objectName": obj.object_name,
+                    "documentTitle": metadata.get("x-amz-meta-documentTitle", ""),
+                    "documentType": metadata.get("x-amz-meta-documentType", ""),
+                    "uploadDate": metadata.get("x-amz-meta-uploadDate", ""),
+                    "isCertified": metadata.get("x-amz-meta-isCertified", "false") == "true"
+                }
+                found_documents.append(document_info)
+        except Exception as e:
+            print(f"[ERROR] No se pudo leer metadata de {obj.object_name}: {e}")
+            continue
+
+    return found_documents
