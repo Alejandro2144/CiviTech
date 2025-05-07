@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
 
   rabbitmq:
@@ -15,6 +17,8 @@ services:
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 10s
       retries: 5
+    networks:
+      - backend
 
   interoperabilidad:
     build:
@@ -24,7 +28,11 @@ services:
       rabbitmq:
         condition: service_healthy
     environment:
-      - RABBIT_URL=amqp://guest:guest@rabbitmq/
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq/
+    ports:
+      - "8000:8000"   
+    networks:
+      - backend
 
   listener_worker:
     build:
@@ -34,11 +42,13 @@ services:
       rabbitmq:
         condition: service_healthy
     environment:
-      - RABBIT_URL=amqp://guest:guest@rabbitmq/
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq/
+    networks:
+      - backend
 
 volumes:
   rabbitmq-data:
 
 networks:
-  default:
+  backend:
     driver: bridge
