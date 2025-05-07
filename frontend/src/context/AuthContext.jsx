@@ -1,40 +1,59 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 
-// Crear contexto
 const AuthContext = createContext()
 
-// Hook para usar en cualquier componente
-export const useAuth = () => useContext(AuthContext)
+export const AuthProvider = ({ children }) => {
+  const [token, setToken] = useState(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-// Proveedor del contexto
-export function AuthProvider({ children }) {
-  const [token, setToken] = useState(localStorage.getItem('token'))
-
-  // Efecto para actualizar token cuando cambie en localStorage
   useEffect(() => {
-    const handleStorage = () => {
-      setToken(localStorage.getItem('token'))
+    const storedToken = localStorage.getItem('token')
+    if (storedToken) {
+      const payload = parseToken(storedToken)
+      if (payload && payload.exp * 1000 > Date.now()) {
+        setToken(storedToken)
+        setIsAuthenticated(true)
+      } else {
+        logout()
+      }
     }
-
-    window.addEventListener('storage', handleStorage)
-    return () => window.removeEventListener('storage', handleStorage)
+    setLoading(false)
   }, [])
 
-  // Función para loguear (guardar token)
+  useEffect(() => {
+    if (!token) return
+    const payload = parseToken(token)
+    if (!payload || payload.exp * 1000 < Date.now()) {
+      logout()
+    }
+  }, [token])
+
+  const parseToken = (token) => {
+    try {
+      return JSON.parse(atob(token.split('.')[1]))
+    } catch {
+      return null
+    }
+  }
+
   const login = (newToken) => {
     localStorage.setItem('token', newToken)
     setToken(newToken)
+    setIsAuthenticated(true)
   }
 
-  // Función para salir (borrar token)
   const logout = () => {
     localStorage.removeItem('token')
     setToken(null)
+    setIsAuthenticated(false)
   }
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated: !!token, login, logout }}>
+    <AuthContext.Provider value={{ token, isAuthenticated, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   )
 }
+
+export const useAuth = () => useContext(AuthContext)

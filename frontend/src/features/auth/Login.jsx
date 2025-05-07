@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { loginCitizen } from '@/features/auth/authService'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
@@ -7,7 +7,15 @@ export default function Login() {
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const navigate = useNavigate()
-  const { login } = useAuth() // 👈 Esto es lo que te faltaba
+  const { login } = useAuth()
+
+  useEffect(() => {
+    const reason = localStorage.getItem('logout_reason')
+    if (reason === 'expired') {
+      setError('Tu sesión ha expirado. Por favor inicia sesión nuevamente.')
+      localStorage.removeItem('logout_reason')
+    }
+  }, [])
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
 
@@ -16,9 +24,8 @@ export default function Login() {
     try {
       const res = await loginCitizen(formData.email, formData.password)
 
-      login(res.access_token) // 👈 Esto actualiza el estado global → Navbar reacciona
-
-      navigate('/welcome', { state: { token: res.access_token } })
+      login(res.access_token)
+      navigate('/')
     } catch (err) {
       setError(err.message)
     }

@@ -24,7 +24,7 @@ export default function Register() {
 
       login(res.access_token)
 
-      navigate('/welcome', { state: { token: res.access_token } })
+      navigate('/', { state: { token: res.access_token } })
     } catch (err) {
       setError(err.message)
     }
