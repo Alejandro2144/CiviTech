@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import example
+from routers import documents_router
 
 app = FastAPI(
     title="CiviTech",
@@ -7,7 +7,7 @@ app = FastAPI(
     version="0.1.0",
 )
 
-app.include_router(example.router)
+app.include_router(documents_router.router)
 
 @app.get("/")
 def read_root():
