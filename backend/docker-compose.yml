@@ -7,8 +7,8 @@ services:
     container_name: autenticacion
     ports:
       - "8000:8000"
-    #env_file:
-    #  - ./autenticacion/.env
+    env_file:
+      - ./autenticacion/.env
     restart: unless-stopped
 
   ciudadanos:
@@ -17,8 +17,8 @@ services:
     container_name: ciudadanos
     ports:
       - "8001:8001"
-    #env_file:
-    #  - ./ciudadanos/.env
+    env_file:
+      - ./ciudadanos/.env
     depends_on:
       - autenticacion
     restart: unless-stopped
@@ -31,8 +31,8 @@ services:
     container_name: documentos
     ports:
       - "8002:8002"
-    #env_file:
-    #  - ./documentos/.env
+    env_file:
+      - ./documentos/.env
     depends_on:
       - autenticacion
     restart: unless-stopped
