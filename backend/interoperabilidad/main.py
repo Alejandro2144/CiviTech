@@ -8,3 +8,4 @@ origins = ["*"]
 app = FastAPI()
 
 app.include_router(citizenTransfer)
+app.include_router(citizenReceiving)
