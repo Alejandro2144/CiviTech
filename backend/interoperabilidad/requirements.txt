@@ -1,2 +1,7 @@
 fastapi
 uvicorn
+httpx
+pydantic
+passlib[bcrypt]
+python-jose
+aio-pika

@@ -1,14 +1,11 @@
 from fastapi import FastAPI
-from app.routers import example
+from routers import *
+from models import *
+import os
 
-app = FastAPI(
-    title="CiviTech",
-    description="This project is intended to the Civitech project for advanced software architectures.",
-    version="0.1.0",
-)
+origins = ["*"]
 
-app.include_router(example.router)
+app = FastAPI()
 
-@app.get("/")
-def read_root():
-    return {"message": "Welcome to the Civitech FastAPI project!"}
+app.include_router(citizenTransfer)
+app.include_router(citizenReceiving)
