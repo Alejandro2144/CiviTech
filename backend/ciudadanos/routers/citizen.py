@@ -5,6 +5,7 @@ from services.citizen_service import CitizenService
 from utils.dependencies import get_current_citizen
 from config.db import get_db
 from models.citizen import Citizen
+from utils.govcarpeta_client import GovCarpetaClient
 
 router = APIRouter(prefix="/citizens", tags=["Citizens"])
 
@@ -64,18 +65,14 @@ async def delete_my_account(current_citizen: Citizen = Depends(get_current_citiz
     return
 
 @router.put("/transfer", status_code=204)
-async def transfer_citizen(current_citizen: Citizen = Depends(get_current_citizen), db: Session = Depends(get_db)):
+async def transfer_citizen(current_citizen: Citizen = Depends(get_current_citizen)):
     """
-    Elimina al ciudadano autenticado tras solicitar transferencia.
+    Desvincula al ciudadano en GovCarpeta para la transferencia. No se elimina localmente.
     """
-    citizen = db.query(Citizen).filter(Citizen.id == current_citizen.id).first()
+    # 🚨 Solo desvincular en GovCarpeta
+    success = await GovCarpetaClient.unregister_citizen(current_citizen.id)
 
-    if not citizen:
-        raise HTTPException(status_code=404, detail="Ciudadano no encontrado")
-
-    # Eliminar ciudadano
-    db.delete(citizen)
-    db.commit()
+    if not success:
+        raise HTTPException(status_code=400, detail="No se pudo desvincular en GovCarpeta")
 
     return
-

@@ -18,8 +18,8 @@ export default function TransferOperator() {
     const fetchOperators = async () => {
       try {
         const res = await interoperabilidadApi.get('/getOperators')
-        
-        // Normalizamos los datos para que tengan id y name
+
+        // Normalizamos los datos
         const normalizedOperators = res.data.map(op => ({
           id: op._id,
           name: op.operatorName,
@@ -43,9 +43,16 @@ export default function TransferOperator() {
 
     if (!selected) return
 
+    const operator = operators.find(op => op.id === selected)
+
+    if (!operator) {
+      setError('Operador no válido seleccionado.')
+      return
+    }
+
     try {
-      await interoperabilidadApi.put('/registerTransferEndPoint', {
-        operatorId: selected
+      await interoperabilidadApi.post('/outgoingTransferCitizen', {
+        transferAPIURL: operator.transferAPIURL
       }, {
         headers: {
           Authorization: `Bearer ${token}`
