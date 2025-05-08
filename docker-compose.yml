@@ -43,15 +43,16 @@ services:
     image: quay.io/minio/minio:RELEASE.2024-04-18T19-09-19Z
     container_name: minio
     ports:
-      - "9000:9000" # API
-      - "9001:9001" # Consola Web
+      - "9000:9000"
+      - "9001:9001"
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: admin123
     volumes:
       - ./backend/documentos/data:/data
     command: server --console-address ":9001" /data
-    
+    restart: unless-stopped
+
   frontend:
     build:
       context: ./frontend
@@ -62,6 +63,54 @@ services:
     depends_on:
       - autenticacion
       - ciudadanos
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      retries: 5
+    restart: unless-stopped
+
+  interoperabilidad:
+    build:
+      context: ./backend/interoperabilidad
+    container_name: interoperabilidad
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      ciudadanos:
+        condition: service_started
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq/
+    ports:
+      - "8003:8000"   # <== Cambiado el puerto para evitar conflicto
+    restart: unless-stopped
+
+  listener_worker:
+    build:
+      context: ./backend/listener_worker
+    container_name: listener_worker
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      ciudadanos:
+        condition: service_started
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq/
+    restart: unless-stopped
+
+volumes:
+  rabbitmq-data:
 
 networks:
   default:

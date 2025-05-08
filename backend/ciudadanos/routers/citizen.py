@@ -52,7 +52,7 @@ async def read_profile(current_citizen: Citizen = Depends(get_current_citizen)):
 @router.delete("/me", status_code=204)
 async def delete_my_account(current_citizen: Citizen = Depends(get_current_citizen), db: Session = Depends(get_db)):
     """
-    Elimina al ciudadano autenticado tanto localmente como en GovCarpeta.
+    Cierra la cuenta permanentemente en CiviTech (elimina localmente y en GovCarpeta).
     """
     service = CitizenService(db)
 
@@ -60,6 +60,22 @@ async def delete_my_account(current_citizen: Citizen = Depends(get_current_citiz
         await service.delete_citizen(current_citizen.id)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+    return
+
+@router.put("/transfer", status_code=204)
+async def transfer_citizen(current_citizen: Citizen = Depends(get_current_citizen), db: Session = Depends(get_db)):
+    """
+    Elimina al ciudadano autenticado tras solicitar transferencia.
+    """
+    citizen = db.query(Citizen).filter(Citizen.id == current_citizen.id).first()
+
+    if not citizen:
+        raise HTTPException(status_code=404, detail="Ciudadano no encontrado")
+
+    # Eliminar ciudadano
+    db.delete(citizen)
+    db.commit()
 
     return
 
