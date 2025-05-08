@@ -42,9 +42,9 @@ def sendToExternalOperator(citizen, urlDocuments, transferAPIURL):
     
     # Preparar el payload con la información del ciudadano (id, name, email) y los documentos
     payload = {
-        "id": citizen.id,
-        "citizenName": citizen.name,
-        "citizenEmail": citizen.email,
+        "id": citizen['id'],
+        "citizenName": citizen['name'],
+        "citizenEmail": citizen['email'],
         "urlDocuments": urlDocuments,
         "confirmAPIURL": CIVITECH_CONFIRMATION_API
     }

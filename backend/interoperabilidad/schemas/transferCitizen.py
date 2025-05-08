@@ -8,7 +8,7 @@ class TransferPayload(BaseModel):
     citizenName: str
     citizenEmail: str
     urlDocuments: dict
-    confirmAPI: HttpUrl
+    confirmAPI: str
 
 
 class UserDataPayload(BaseModel):
@@ -17,12 +17,12 @@ class UserDataPayload(BaseModel):
     citizenEmail: str
 
 class InitialTransferPayload(BaseModel):
-    transferAPIURL: HttpUrl
+    transferAPIURL: str
 
 class confirmTransferPayload(BaseModel):
     id: int
     req_status: int
-    confirmAPIURL: HttpUrl
+    confirmAPIURL: str
 
 class ConfirmPayload(BaseModel):
     id: int

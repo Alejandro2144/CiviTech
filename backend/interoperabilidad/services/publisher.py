@@ -14,6 +14,8 @@ async def publishUserTransferMessages(req):
         "confirmAPI": req.confirmAPI
     }).encode()
 
+    print(f"Payload usuario: {user_payload}")
+
     conn = await get_connection()
     channel = await conn.channel()
     await channel.default_exchange.publish(Message(user_payload), routing_key=USER_QUEUE)

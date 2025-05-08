@@ -15,7 +15,7 @@ async def process_user(msg: IncomingMessage):
     '''async with httpx.AsyncClient() as client:
         await client.post(f"{CITIZEN_MS_URL}/api/users", json=data)'''
     
-    print(f"Usuario procesado: {data}")
+    print(f"Usuario procesado: {data}", flush=True)
 
     await msg.ack()
 
@@ -31,7 +31,7 @@ async def process_docs(msg: IncomingMessage):
             json={"id": user_id, "urls": urls}
         )'''
     
-    print(f"Documentos procesados para el usuario {user_id}: {urls}")
+    print(f"Documentos procesados para el usuario {user_id}: {urls}", flush=True)
     
     await msg.ack()
 
@@ -62,7 +62,7 @@ async def process_confirmation(msg: IncomingMessage):
     async with httpx.AsyncClient() as client:
         await client.post(INTEROP_MS_URL, json=confirmation_payload)
 
-    print(f"ID Usuario Cargado a BD y bucket: {confirmation_payload.id}")
+    print(f"ID Usuario Cargado a BD y bucket: {confirmation_payload['id']}")
     
     await msg.ack()
 
@@ -73,12 +73,12 @@ async def main():
     doc_q  = await chan.declare_queue(DOC_QUEUE, durable=True)
     id_user_q = await chan.declare_queue(ID_USER_QUEUE, durable=True)
     upload_confirm_q = await chan.declare_queue(UPLOAD_CONFIRM_QUEUE, durable=True)
-
+    print("Worker listener iniciado...", flush=True)
     await user_q.consume(process_user)
     await doc_q.consume(process_docs)
     await id_user_q.consume(process_id_user)
     await upload_confirm_q.consume(process_confirmation)
-    print("Worker listener iniciado...")
+    
     await asyncio.Future()
 
 if __name__ == '__main__':
