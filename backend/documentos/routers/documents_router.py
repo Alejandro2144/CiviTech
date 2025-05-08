@@ -5,6 +5,7 @@ from schemas.document_schema import DocumentMetadata
 from services.document_service import upload_document
 from services.document_service import list_documents_by_citizen
 from services.document_service import generate_signed_url
+from services.document_service import delete_document
 
 router = APIRouter(
     prefix="/documents",
@@ -75,3 +76,10 @@ async def download_document(object_name: str):
     download_url = generate_signed_url(object_name, disposition="attachment")
     return {"downloadUrl": download_url}
 
+@router.delete("/delete/{object_name}")
+async def delete_document_endpoint(object_name: str):
+    """
+    Elimina un documento específico del bucket.
+    """
+    response = await delete_document(object_name)
+    return response

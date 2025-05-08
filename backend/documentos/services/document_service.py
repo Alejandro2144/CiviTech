@@ -5,7 +5,6 @@ from config.minio_client import get_minio_client
 from utils.govcarpeta_client import GovCarpetaClient
 from schemas.document_schema import DocumentMetadata
 import io
-import json
 
 bucket_name = "documents"
 
@@ -162,6 +161,15 @@ def upload_to_minio(client, bucket_name, object_name, file_data: bytes, metadata
     )
 
 async def handle_authentication(metadata: DocumentMetadata):
-    auth_status, auth_date = await GovCarpetaClient.authenticate_document(metadata.dict())
+    auth_status, auth_date = await GovCarpetaClient.authenticate_document(metadata.model_dump())
     metadata.authenticationStatus = auth_status
     metadata.authenticationDate = auth_date
+
+async def delete_document(object_name: str):
+    client = get_minio_client()
+    try:
+        client.remove_object(bucket_name="documents", object_name=object_name)
+        return {"message": f"Documento '{object_name}' eliminado correctamente."}
+    except Exception as e:
+        print(f"[ERROR] Error eliminando documento: {e}")
+        raise HTTPException(status_code=500, detail="Error eliminando documento. Reintente más tarde.")
