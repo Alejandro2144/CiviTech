@@ -1,4 +1,5 @@
 from datetime import timedelta
+import mimetypes
 from fastapi import HTTPException
 from config.minio_client import get_minio_client
 from utils.govcarpeta_client import GovCarpetaClient
@@ -57,6 +58,66 @@ async def upload_document(file_data: bytes, original_filename: str, metadata: Do
         "metadata": metadata
     }
 
+async def list_documents_by_citizen(idCitizen: str):
+    client = get_minio_client()
+
+    if not client.bucket_exists(bucket_name):
+        return []
+
+    found_documents = []
+
+    # Listar todos los objetos en el bucket
+    objects = client.list_objects(bucket_name, recursive=True)
+
+    for obj in objects:
+        # Para cada objeto, obtener su metadata
+        try:
+            info = client.stat_object(bucket_name, obj.object_name)
+            metadata = info.metadata
+
+            if metadata.get("x-amz-meta-idCitizen") == idCitizen:
+                # Construir respuesta parcial
+                document_info = {
+                    "objectName": obj.object_name,
+                    "documentTitle": metadata.get("x-amz-meta-documentTitle", ""),
+                    "documentType": metadata.get("x-amz-meta-documentType", ""),
+                    "uploadDate": metadata.get("x-amz-meta-uploadDate", ""),
+                    "isCertified": metadata.get("x-amz-meta-isCertified", "false").lower() == "true",
+                }
+                found_documents.append(document_info)
+        except Exception as e:
+            print(f"[ERROR] No se pudo leer metadata de {obj.object_name}: {e}")
+            continue
+
+    return found_documents
+
+def generate_signed_url(object_name: str, expiry_seconds: int = 3600, disposition: str = "inline") -> str:
+    """
+    Genera una URL firmada para visualizar el documento.
+    """
+    client = get_minio_client()
+
+    # Detectar el Content-Type basado en la extensión
+    content_type, _ = mimetypes.guess_type(object_name)
+
+    # Si no logra adivinar, por defecto usamos application/octet-stream
+    if not content_type:
+        content_type = "application/octet-stream"
+
+    # Agregar headers
+    response_headers = {
+        "response-content-disposition": f'{disposition}; filename="{object_name}"',
+        "response-content-type": content_type
+    }
+
+    url = client.presigned_get_object(
+        bucket_name=bucket_name,
+        object_name=object_name,
+        expires=timedelta(seconds=expiry_seconds),
+        response_headers=response_headers
+    )
+    return url
+
 def ensure_bucket_exists(client, bucket_name):
     if not client.bucket_exists(bucket_name):
         client.make_bucket(bucket_name)
@@ -104,48 +165,3 @@ async def handle_authentication(metadata: DocumentMetadata):
     auth_status, auth_date = await GovCarpetaClient.authenticate_document(metadata.dict())
     metadata.authenticationStatus = auth_status
     metadata.authenticationDate = auth_date
-
-async def list_documents_by_citizen(idCitizen: str):
-    client = get_minio_client()
-
-    if not client.bucket_exists(bucket_name):
-        return []
-
-    found_documents = []
-
-    # Listar todos los objetos en el bucket
-    objects = client.list_objects(bucket_name, recursive=True)
-
-    for obj in objects:
-        # Para cada objeto, obtener su metadata
-        try:
-            info = client.stat_object(bucket_name, obj.object_name)
-            metadata = info.metadata
-
-            if metadata.get("x-amz-meta-idCitizen") == idCitizen:
-                # Construir respuesta parcial
-                document_info = {
-                    "objectName": obj.object_name,
-                    "documentTitle": metadata.get("x-amz-meta-documentTitle", ""),
-                    "documentType": metadata.get("x-amz-meta-documentType", ""),
-                    "uploadDate": metadata.get("x-amz-meta-uploadDate", ""),
-                    "isCertified": metadata.get("x-amz-meta-isCertified", "false").lower() == "true",
-                }
-                found_documents.append(document_info)
-        except Exception as e:
-            print(f"[ERROR] No se pudo leer metadata de {obj.object_name}: {e}")
-            continue
-
-    return found_documents
-
-def generate_signed_url(object_name: str, expiry_seconds: int = 3600) -> str:
-    """
-    Genera una URL firmada para visualizar el documento.
-    """
-    client = get_minio_client()
-    url = client.presigned_get_object(
-        bucket_name=bucket_name,
-        object_name=object_name,
-        expires=timedelta(seconds=expiry_seconds)
-    )
-    return url

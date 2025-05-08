@@ -66,3 +66,12 @@ async def view_document(object_name: str):
     """
     view_url = generate_signed_url(object_name)
     return {"viewUrl": view_url}
+
+@router.get("/download/{object_name}")
+async def download_document(object_name: str):
+    """
+    Genera una URL firmada para descargar un documento específico.
+    """
+    download_url = generate_signed_url(object_name, disposition="attachment")
+    return {"downloadUrl": download_url}
+
