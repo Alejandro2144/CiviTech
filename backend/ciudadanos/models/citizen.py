@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Boolean
 from config.db import Base
 
 class Citizen(Base):
@@ -6,7 +6,8 @@ class Citizen(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    address = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
     civi_email = Column(String, unique=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
+    hashed_password = Column(String, nullable=True)
+    password_set = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)  # Opcional

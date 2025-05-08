@@ -25,11 +25,13 @@ class CitizenService:
         if citizen_exists:
             raise HTTPException(status_code=400, detail="El ciudadano ya está registrado en GovCarpeta")
 
-        # Registrar en GovCarpeta
+        # Obtener address si existe, si no, dejarlo como None (se enviará como null)
+        address = getattr(citizen_data, "address", None)
+
         gov_payload = {
             "id": citizen_data.id,
             "name": citizen_data.name,
-            "address": citizen_data.address,
+            "address": address,  # Esto será null si address no existe
             "email": citizen_data.email,
             "operatorId": GOVCARPETA_OPERATOR_ID,
             "operatorName": GOVCARPETA_OPERATOR_NAME
@@ -49,7 +51,6 @@ class CitizenService:
         citizen = Citizen(
             id=citizen_data.id,
             name=citizen_data.name,
-            address=citizen_data.address,
             email=citizen_data.email,
             civi_email=civi_email,
             hashed_password=hashed_pwd

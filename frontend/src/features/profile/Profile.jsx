@@ -61,7 +61,6 @@ export default function Profile() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <p><span className="text-indigo-400 font-semibold">Cédula de Ciudadanía:</span> {profile.id}</p>
               <p><span className="text-indigo-400 font-semibold">Nombre:</span> {profile.name}</p>
-              <p><span className="text-indigo-400 font-semibold">Dirección:</span> {profile.address}</p>
               <p><span className="text-indigo-400 font-semibold">Correo electrónico:</span> {profile.email}</p>
               <p><span className="text-indigo-400 font-semibold">Correo CiviTech:</span> {profile.civi_email}</p>
             </div>

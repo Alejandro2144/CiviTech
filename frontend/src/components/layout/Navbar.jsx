@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import Toast from '@/components/ui/Toast'
-import { LogIn, UserPlus, User, LogOut } from 'lucide-react'
+import { LogIn, UserPlus, User, LogOut, MoveRight } from 'lucide-react'
 
 export default function Navbar() {
   const { isAuthenticated, logout } = useAuth()
@@ -62,6 +62,18 @@ export default function Navbar() {
                 >
                   <User className="w-5 h-5" />
                   Perfil
+                </NavLink>
+
+                <NavLink
+                  to="/transfer"
+                  className={({ isActive }) =>
+                    isActive
+                      ? 'text-gray-300 font-semibold flex items-center gap-2'
+                      : 'text-white hover:text-gray-300 transition flex items-center gap-2'
+                  }
+                >
+                  <MoveRight className="w-5 h-5" />
+                  Transferirme
                 </NavLink>
 
                 <button
