@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from config.minio_client import get_minio_client
 from config.minio_client import generate_presigned_url
 from utils.govcarpeta_client import GovCarpetaClient
@@ -7,69 +8,102 @@ import json
 
 bucket_name = "documents"
 
-async def upload_document(file_data: bytes, original_filename: str, metadata: DocumentMetadata):
+async def upload_document(file_data: bytes, original_filename: str, metadata: DocumentMetadata, force_update: bool = False):
     client = get_minio_client()
+    ensure_bucket_exists(client, bucket_name="documents")
 
-    # Asegurarnos que el bucket existe
+    final_filename = f"{metadata.idDocument}_{original_filename}"
+
+    # Verificar si ya existe
+    existing_object = find_existing_document(client, metadata.idCitizen, metadata.documentTitle, metadata.documentType)
+
+    if existing_object and not force_update:
+        raise HTTPException(
+            status_code=409,
+            detail="Documento ya existe. ¿Desea actualizarlo?"
+        )
+
+    if existing_object:
+        final_filename = existing_object
+        try:
+            stat = client.stat_object(bucket_name, final_filename)
+            existing_metadata = stat.metadata
+            previous_idDocument = existing_metadata.get("x-amz-meta-iddocument")
+            if previous_idDocument:
+                metadata.idDocument = previous_idDocument
+        except Exception as e:
+            raise HTTPException(status_code=500, detail="Error obteniendo metadata previa.")
+    else:
+        final_filename = f"{metadata.idDocument}_{original_filename}"
+
+    #Subir archivo inicialmente a MinIO (sin firmarlo aún)
+    upload_to_minio(client, bucket_name, final_filename, file_data, prepare_object_metadata(metadata))
+
+    # Generar URL firmada
+    signed_url = generate_presigned_url(bucket_name="documents", object_name=final_filename)
+    metadata.urlDocument = signed_url
+
+    # Autenticar contra GovCarpeta
+    await handle_authentication(metadata)
+
+    # Borrar el objeto anterior
+    client.remove_object(bucket_name, final_filename)
+
+    # Volver a subir metadata si cambia por autenticación
+    upload_to_minio(client, bucket_name, final_filename, file_data, prepare_object_metadata(metadata))
+
+    return {
+        "message": "Documento cargado o actualizado y autenticado correctamente.",
+        "metadata": metadata
+    }
+
+def ensure_bucket_exists(client, bucket_name):
     if not client.bucket_exists(bucket_name):
         client.make_bucket(bucket_name)
 
-    # Generar nombre final
-    final_filename = f"{metadata.idDocument}_{original_filename}"
+def find_existing_document(client, idCitizen: str, documentTitle: str, documentType: str):
+    """
+    Busca si existe un documento para el ciudadano con título y tipo.
+    """
+    try:
+        objects = client.list_objects(bucket_name, recursive=True)
+        for obj in objects:
+            stat = client.stat_object(bucket_name, obj.object_name)
+            meta = stat.metadata
+            if (meta.get("x-amz-meta-idCitizen") == idCitizen and
+                meta.get("x-amz-meta-documentTitle") == documentTitle and
+                meta.get("x-amz-meta-documentType") == documentType):
+                return obj.object_name
+        return None
+    except Exception as e:
+        return None
 
-    # Generar la URL firmada para el acceso al documento
-    signed_url = generate_presigned_url(
-        bucket_name=bucket_name,
-        object_name=final_filename
-    )
+def prepare_object_metadata(metadata: DocumentMetadata) -> dict:
+    return {
+        "x-amz-meta-idDocument": metadata.idDocument,
+        "x-amz-meta-idCitizen": metadata.idCitizen,
+        "x-amz-meta-documentTitle": metadata.documentTitle,
+        "x-amz-meta-documentType": metadata.documentType,
+        "x-amz-meta-uploadDate": metadata.uploadDate.isoformat(),
+        "x-amz-meta-isCertified": str(metadata.isCertified),
+        "x-amz-meta-authenticationStatus": metadata.authenticationStatus,
+        "x-amz-meta-accessControlList": ",".join(metadata.accessControlList or [])
+    }
 
-    # Actualizar el metadata.urlDocument con el URL firmado
-    metadata.urlDocument = signed_url
-
-    # Autenticar en GovCarpeta
-    metadata_dict = metadata.model_dump()
-    auth_status, auth_date = await GovCarpetaClient.authenticate_document(metadata_dict)
-
-    metadata.authenticationStatus = auth_status
-    metadata.authenticationDate = auth_date
-
-    # Convertir bytes a un objeto file-like con método read()
+def upload_to_minio(client, bucket_name, object_name, file_data: bytes, metadata: dict):
     file_data_io = io.BytesIO(file_data)
-
-    # Subir el archivo a MinIO
     client.put_object(
         bucket_name=bucket_name,
-        object_name=final_filename,
+        object_name=object_name,
         data=file_data_io,
         length=len(file_data),
-        metadata={
-            "x-amz-meta-idCitizen": metadata.idCitizen,
-            "x-amz-meta-documentTitle": metadata.documentTitle,
-            "x-amz-meta-documentType": metadata.documentType,
-            "x-amz-meta-uploadDate": metadata.uploadDate.isoformat(),
-            "x-amz-meta-isCertified": str(metadata.isCertified).lower(),
-            "x-amz-meta-authenticationStatus": metadata.authenticationStatus,
-            "x-amz-meta-accessControlList": ",".join(metadata.accessControlList or [])
-        }
+        metadata=metadata
     )
 
-    serializable_metadata = {
-        "idDocument": str(metadata.idDocument),
-        "idCitizen": metadata.idCitizen,
-        "documentTitle": metadata.documentTitle,
-        "urlDocument": metadata.urlDocument,
-        "uploadDate": metadata.uploadDate.isoformat() if metadata.uploadDate else None,
-        "documentType": metadata.documentType,
-        "isCertified": metadata.isCertified,
-        "authenticationStatus": metadata.authenticationStatus,
-        "authenticationDate": metadata.authenticationDate.isoformat() if metadata.authenticationDate else None,
-        "accessControlList": metadata.accessControlList if metadata.accessControlList else []
-    }
-
-    return {
-        "message": "Documento cargado y autenticado correctamente.",
-        "metadata": serializable_metadata
-    }
+async def handle_authentication(metadata: DocumentMetadata):
+    auth_status, auth_date = await GovCarpetaClient.authenticate_document(metadata.dict())
+    metadata.authenticationStatus = auth_status
+    metadata.authenticationDate = auth_date
 
 async def list_documents_by_citizen(idCitizen: str):
     client = get_minio_client()

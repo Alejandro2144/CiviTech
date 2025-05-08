@@ -17,7 +17,8 @@ async def upload_document_endpoint(
     documentTitle: str = Form(...),
     documentType: Optional[str] = Form("document"),
     isCertified: Optional[bool] = Form(False),
-    accessControlList: Optional[str] = Form(None)  # Recibimos como texto (JSON string)
+    accessControlList: Optional[str] = Form(None),
+    forceUpdate: bool = Form(default=False)
 ):
     """
     Sube un documento a GovCarpeta y lo autentica.
@@ -43,7 +44,7 @@ async def upload_document_endpoint(
     )
 
     # Subir documento y manejar todo el flujo
-    response = await upload_document(file_content, file.filename, metadata)
+    response = await upload_document(file_content, file.filename, metadata,force_update=forceUpdate)
 
     return response
 
