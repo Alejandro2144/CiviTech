@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
-from services.externalOperators import *
+from services.outgoingTransactions import *
+# from backend.interoperabilidad.services.outgoingTransactions import *
 from constants import GOV_CARPETA_BASEURL
 from models import *
 from schemas import *
@@ -8,10 +9,30 @@ from services import *
 
 citizenTransfer = APIRouter()
 
-@citizenTransfer.post("/transfer-citizen/{citizen_id}", response_model=TransferPayload)
-async def transfer_citizen(citizen_id: int):
+@citizenTransfer.post("/outgoingTransferCitizen")
+async def outgoingTransferCitizen(req: InitialTransferPayload):
     
-    response = sendToExternalOperator(citizen_id)
+    # Obtener la URL del operador externo acá mismo
+    
+    transferAPIURL = req.transferAPIURL
+
+    # Llamar a API del microservicio de ciudadano para obtener la info del ciudadano.
+
+    citizen = getCitizenInfo()
+    
+    ## Se debe preparar la información del ciudadano para enviarla al operador externo.
+    # {
+    #     "id": id,
+    #     "citizenName": name,
+    #     "citizenEmail": email
+    # }
+    #
+    ## Se debe obtener la lista de documentos del ciudadano para enviarlos al operador externo.
+    
+    urlDocuments = getCitizenDocuments(citizen.id)
+    
+
+    response = sendToExternalOperator(citizen, urlDocuments, transferAPIURL)
 
     return response
 
