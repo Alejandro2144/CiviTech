@@ -4,10 +4,12 @@ from constants import GOV_CARPETA_BASEURL
 from models import *
 from schemas import *
 
-# Get the list of active external operators
+# Get the citizen info from the citizen microservice
 
-def getExternalOperatorsList():
-    url = f"{GOV_CARPETA_BASEURL}/getOperators"
+def getCitizenInfo():
+
+    url = "http://citizen-microservice:8000/citizen"
+    
     try:
         # synchronous HTTP client
         with httpx.Client() as client:
@@ -27,33 +29,18 @@ def getExternalOperatorsList():
             detail=f"Upstream service returned error: {e.response.text}"
         )
 
-    # Filter only operators with a non-empty transferAPIURL
-    filtered = [
-        item for item in data
-        if item.get("transferAPIURL") and item["transferAPIURL"].strip()
-    ]
-
-    return filtered
+    return data
 
 
-# Send citizen data to external operator
-
-def sendToExternalOperator(citizen_id: int):
-
-    data = MOCK_CITIZENS.get(citizen_id)
-
-    if not data:
-        raise HTTPException(status_code=404, detail="Ciudadano no encontrado")
-
-    # 3.2 Construir el payload
-    payload = TransferPayload(id=citizen_id, **data)
-    url = f"{GOV_CARPETA_BASEURL}/transferCitizen"
+def getCitizenDocuments(citizen_id: int):
+    url = f"/citizen/{citizen_id}/documents"
+    
     try:
         # synchronous HTTP client
         with httpx.Client() as client:
-            response = client.post(url, json=payload)
+            response = client.get(url)
             response.raise_for_status()
-            data = response.json()
+            documents = response.json()
     except httpx.RequestError as e:
         # network or connection error
         raise HTTPException(
@@ -67,4 +54,4 @@ def sendToExternalOperator(citizen_id: int):
             detail=f"Upstream service returned error: {e.response.text}"
         )
 
-    return data
+    return documents
