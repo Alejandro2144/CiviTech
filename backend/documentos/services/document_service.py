@@ -1,6 +1,6 @@
+from datetime import timedelta
 from fastapi import HTTPException
 from config.minio_client import get_minio_client
-from config.minio_client import generate_presigned_url
 from utils.govcarpeta_client import GovCarpetaClient
 from schemas.document_schema import DocumentMetadata
 import io
@@ -40,7 +40,7 @@ async def upload_document(file_data: bytes, original_filename: str, metadata: Do
     upload_to_minio(client, bucket_name, final_filename, file_data, prepare_object_metadata(metadata))
 
     # Generar URL firmada
-    signed_url = generate_presigned_url(bucket_name="documents", object_name=final_filename)
+    signed_url = generate_signed_url(final_filename, expiry_seconds=3600)
     metadata.urlDocument = signed_url
 
     # Autenticar contra GovCarpeta
@@ -129,7 +129,7 @@ async def list_documents_by_citizen(idCitizen: str):
                     "documentTitle": metadata.get("x-amz-meta-documentTitle", ""),
                     "documentType": metadata.get("x-amz-meta-documentType", ""),
                     "uploadDate": metadata.get("x-amz-meta-uploadDate", ""),
-                    "isCertified": metadata.get("x-amz-meta-isCertified", "false") == "true"
+                    "isCertified": metadata.get("x-amz-meta-isCertified", "false").lower() == "true",
                 }
                 found_documents.append(document_info)
         except Exception as e:
@@ -137,3 +137,15 @@ async def list_documents_by_citizen(idCitizen: str):
             continue
 
     return found_documents
+
+def generate_signed_url(object_name: str, expiry_seconds: int = 3600) -> str:
+    """
+    Genera una URL firmada para visualizar el documento.
+    """
+    client = get_minio_client()
+    url = client.presigned_get_object(
+        bucket_name=bucket_name,
+        object_name=object_name,
+        expires=timedelta(seconds=expiry_seconds)
+    )
+    return url

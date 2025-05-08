@@ -4,6 +4,7 @@ from typing import Optional
 from schemas.document_schema import DocumentMetadata
 from services.document_service import upload_document
 from services.document_service import list_documents_by_citizen
+from services.document_service import generate_signed_url
 
 router = APIRouter(
     prefix="/documents",
@@ -57,3 +58,11 @@ async def list_documents(idCitizen: str):
     if not documents:
         return {"message": "No tienes documentos cargados."}
     return {"documents": documents}
+
+@router.get("/view/{object_name}")
+async def view_document(object_name: str):
+    """
+    Genera una URL firmada para visualizar un documento específico.
+    """
+    view_url = generate_signed_url(object_name)
+    return {"viewUrl": view_url}
