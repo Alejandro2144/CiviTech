@@ -90,6 +90,48 @@ async def list_documents_by_citizen(idCitizen: str):
 
     return found_documents
 
+async def delete_document(object_name: str):
+    client = get_minio_client()
+    try:
+        client.remove_object(bucket_name="documents", object_name=object_name)
+        return {"message": f"Documento '{object_name}' eliminado correctamente."}
+    except Exception as e:
+        print(f"[ERROR] Error eliminando documento: {e}")
+        raise HTTPException(status_code=500, detail="Error eliminando documento. Reintente más tarde.")
+    
+async def delete_folder_by_citizen(idCitizen: str):
+    client = get_minio_client()
+
+    if not client.bucket_exists(bucket_name):
+        raise HTTPException(status_code=404, detail="Bucket de documentos no encontrado.")
+
+    objects_to_delete = []
+    objects = client.list_objects(bucket_name, recursive=True)
+
+    for obj in objects:
+        try:
+            info = client.stat_object(bucket_name, obj.object_name)
+            metadata = info.metadata
+
+            if metadata.get("x-amz-meta-idCitizen") == idCitizen:
+                objects_to_delete.append(obj.object_name)
+        except Exception as e:
+            print(f"[ERROR] Error leyendo metadata de {obj.object_name}: {e}")
+            continue
+
+    if not objects_to_delete:
+        return {"message": "No se encontraron documentos para este ciudadano."}
+
+    # Eliminar cada objeto encontrado
+    for object_name in objects_to_delete:
+        try:
+            client.remove_object(bucket_name, object_name)
+        except Exception as e:
+            print(f"[ERROR] No se pudo eliminar {object_name}: {e}")
+
+    return {"message": f"La Carpeta del ciudadano {idCitizen} fue eliminada correctamente."}
+
+
 def generate_signed_url(object_name: str, expiry_seconds: int = 3600, disposition: str = "inline") -> str:
     """
     Genera una URL firmada para visualizar el documento.
@@ -165,11 +207,3 @@ async def handle_authentication(metadata: DocumentMetadata):
     metadata.authenticationStatus = auth_status
     metadata.authenticationDate = auth_date
 
-async def delete_document(object_name: str):
-    client = get_minio_client()
-    try:
-        client.remove_object(bucket_name="documents", object_name=object_name)
-        return {"message": f"Documento '{object_name}' eliminado correctamente."}
-    except Exception as e:
-        print(f"[ERROR] Error eliminando documento: {e}")
-        raise HTTPException(status_code=500, detail="Error eliminando documento. Reintente más tarde.")

@@ -6,6 +6,7 @@ from services.document_service import upload_document
 from services.document_service import list_documents_by_citizen
 from services.document_service import generate_signed_url
 from services.document_service import delete_document
+from services.document_service import delete_folder_by_citizen
 
 router = APIRouter(
     prefix="/documents",
@@ -82,4 +83,12 @@ async def delete_document_endpoint(object_name: str):
     Elimina un documento específico del bucket.
     """
     response = await delete_document(object_name)
+    return response
+
+@router.delete("/delete/folder/{idCitizen}")
+async def delete_all_documents_endpoint(idCitizen: str):
+    """
+    Elimina todos los documentos de un ciudadano en la carpeta.
+    """
+    response = await delete_folder_by_citizen(idCitizen)
     return response
