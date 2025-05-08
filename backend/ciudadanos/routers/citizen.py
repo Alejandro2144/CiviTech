@@ -18,7 +18,6 @@ async def register_citizen(citizen: CitizenCreate, db: Session = Depends(get_db)
         return CitizenResponse(
             id=citizen_db.id,
             name=citizen_db.name,
-            address=citizen_db.address,
             email=citizen_db.email,
             civi_email=citizen_db.civi_email,
             access_token=access_token
@@ -38,7 +37,6 @@ async def login(citizen_login: CitizenLogin, db: Session = Depends(get_db)):
     return CitizenResponse(
         id=citizen.id,
         name=citizen.name,
-        address=citizen.address,
         email=citizen.email,
         civi_email=citizen.civi_email,
         access_token=access_token
@@ -64,6 +62,4 @@ async def delete_my_account(current_citizen: Citizen = Depends(get_current_citiz
         raise HTTPException(status_code=400, detail=str(e))
 
     return
-
-
 

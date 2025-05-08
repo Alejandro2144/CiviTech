@@ -27,7 +27,7 @@ class GovCarpetaClient:
             payload = {
                 "id": str(citizen_data["id"]),
                 "name": citizen_data["name"],
-                "address": citizen_data["address"],
+                "address": "-",
                 "email": citizen_data["email"],
                 "operatorId": GOVCARPETA_OPERATOR_ID,
                 "operatorName": GOVCARPETA_OPERATOR_NAME

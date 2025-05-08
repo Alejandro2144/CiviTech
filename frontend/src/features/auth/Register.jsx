@@ -7,7 +7,6 @@ export default function Register() {
   const [formData, setFormData] = useState({
     id: '',
     name: '',
-    address: '',
     email: '',
     password: '',
   })
@@ -51,16 +50,6 @@ export default function Register() {
             name="name"
             placeholder="Nombre"
             value={formData.name}
-            onChange={handleChange}
-            className="w-full bg-neutral-800 text-white placeholder-gray-400 border border-neutral-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
-            required
-          />
-
-          <input
-            type="text"
-            name="address"
-            placeholder="Dirección"
-            value={formData.address}
             onChange={handleChange}
             className="w-full bg-neutral-800 text-white placeholder-gray-400 border border-neutral-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200"
             required
