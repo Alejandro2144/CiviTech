@@ -1,21 +1,21 @@
 import os
 import httpx
 from dotenv import load_dotenv
+from fastapi import HTTPException
+from constants import AUTH_VALIDATE_URL
 
 load_dotenv()
 
-TOKEN_MICROSERVICE_URL = os.getenv("TOKEN_MICROSERVICE_URL")
+#AUTH_VALIDATE_URL = os.getenv("AUTH_VALIDATE_URL")
 
-async def get_token_for_interoperabilidad():
-    payload = {
-        "id": 0,
-        "email": "interoperabilidad@civitech.com"  
-    }
+async def validate_token_remote(token: str) -> dict:
+    headers = {"Authorization": f"Bearer {token}"}
 
     async with httpx.AsyncClient() as client:
-        response = await client.post(TOKEN_MICROSERVICE_URL, json=payload)
+        response = await client.post(AUTH_VALIDATE_URL, headers=headers)
 
-        if response.status_code == 200:
-            return response.json()["access_token"]
-        else:
-            raise Exception("Error al generar token para interoperabilidad")
+    if response.status_code == 200:
+        return response.json()
+
+    raise HTTPException(status_code=403, detail="Token inválido o expirado")
+ 

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from schemas.citizen import CitizenCreate, CitizenResponse, CitizenLogin, CitizenProfileResponse
+from schemas.citizen import CitizenCreate, CitizenResponse, CitizenLogin, CitizenProfileResponse, UserIdPayload
 from services.citizen_service import CitizenService
 from utils.dependencies import get_current_citizen
 from config.db import get_db
@@ -64,15 +64,18 @@ async def delete_my_account(current_citizen: Citizen = Depends(get_current_citiz
 
     return
 
-@router.put("/transfer", status_code=204)
-async def transfer_citizen(current_citizen: Citizen = Depends(get_current_citizen)):
+@router.delete("/delete", status_code=204)
+async def delete_citizen(req: UserIdPayload, db: Session = Depends(get_db)):
     """
-    Desvincula al ciudadano en GovCarpeta para la transferencia. No se elimina localmente.
+    Elimina un ciudadano localmente
     """
-    # 🚨 Solo desvincular en GovCarpeta
-    success = await GovCarpetaClient.unregister_citizen(current_citizen.id)
+    service = CitizenService(db)
 
-    if not success:
-        raise HTTPException(status_code=400, detail="No se pudo desvincular en GovCarpeta")
+    print("INFO: Trying to delete citizen with ID:", req.id, flush=True)
+
+    try:
+        await service.delete_citizen_db(req.id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     return

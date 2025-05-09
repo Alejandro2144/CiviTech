@@ -49,7 +49,7 @@ def sendToExternalOperator(citizen, urlDocuments, transferAPIURL):
         "confirmAPIURL": CIVITECH_CONFIRMATION_API
     }
     # Enviar el payload al operador externo
-    try:
+    '''try:
         # synchronous HTTP client
         with httpx.Client() as client:
             response = client.post(transferAPIURL, json=payload)
@@ -66,5 +66,6 @@ def sendToExternalOperator(citizen, urlDocuments, transferAPIURL):
         raise HTTPException(
             status_code=e.response.status_code,
             detail=f"Upstream service returned error: {e.response.text}"
-        )
+        )'''
+    data = payload
     return data

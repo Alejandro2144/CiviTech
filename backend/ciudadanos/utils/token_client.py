@@ -6,9 +6,10 @@ load_dotenv()
 
 TOKEN_MICROSERVICE_URL = os.getenv("TOKEN_MICROSERVICE_URL")
 
-async def get_token(citizen_id: int, email: str) -> str:
+async def get_token(citizen_id: int, citizen_name: str, email: str) -> str:
     payload = {
         "id": citizen_id,
+        "name": citizen_name,
         "email": email
     }
 
