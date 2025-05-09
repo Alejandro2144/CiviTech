@@ -24,11 +24,15 @@ async def process_docs(msg: IncomingMessage):
     urls = payload['urlDocuments']
 
     # -> Aquí: comunicación HTTP al microservicio de documentos
-    '''async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient() as client:
         await client.post(
-            f"{DOCUMENT_MS_URL}/api/documents/process",
-            json={"id": user_id, "urls": urls}
-        )'''
+            f"{DOCUMENT_MS_URL}/documents/recepcionInfoDocumentos",
+            json={
+            "id": user_id,
+            "urlDocuments": urls,
+            "confirmAPI": "http://example.com/api/transferCitizenConfirm"  # cambia si tienes una real
+        }
+        )
     
     print(f"Documentos procesados para el usuario {user_id}: {urls}")
     

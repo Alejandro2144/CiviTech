@@ -75,13 +75,18 @@ async def list_documents_by_citizen(idCitizen: str):
             metadata = info.metadata
 
             if metadata.get("x-amz-meta-idCitizen") == idCitizen:
-                # Construir respuesta parcial
+                # Generar URL firmada para este documento
+                signed_url = generate_signed_url(obj.object_name, expiry_seconds=3600)
+
+                # Construir respuesta con la URL firmada incluida
                 document_info = {
                     "objectName": obj.object_name,
                     "documentTitle": metadata.get("x-amz-meta-documentTitle", ""),
                     "documentType": metadata.get("x-amz-meta-documentType", ""),
                     "uploadDate": metadata.get("x-amz-meta-uploadDate", ""),
                     "isCertified": metadata.get("x-amz-meta-isCertified", "false").lower() == "true",
+                    "urlDocument": signed_url,
+                    "authenticationStatus": metadata.get("x-amz-meta-authenticationStatus", "pending")
                 }
                 found_documents.append(document_info)
         except Exception as e:

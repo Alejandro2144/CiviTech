@@ -1,5 +1,5 @@
 import json
-from fastapi import APIRouter, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from typing import Optional
 from schemas.document_schema import DocumentMetadata
 from services.document_service import upload_document
@@ -7,6 +7,7 @@ from services.document_service import list_documents_by_citizen
 from services.document_service import generate_signed_url
 from services.document_service import delete_document
 from services.document_service import delete_folder_by_citizen
+from services.transfer_service import process_transfer_message
 
 router = APIRouter(
     prefix="/documents",
@@ -92,3 +93,14 @@ async def delete_all_documents_endpoint(idCitizen: str):
     """
     response = await delete_folder_by_citizen(idCitizen)
     return response
+
+@router.post("/recepcionInfoDocumentos")
+async def recepcion_info_documentos(payload: dict):
+    """
+    Recibe información de transferencia de documentos para un ciudadano.
+    """
+    try:
+        await process_transfer_message(payload)
+        return {"message": "Transferencia recibida y procesada correctamente."}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
