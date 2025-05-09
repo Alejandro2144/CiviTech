@@ -11,21 +11,32 @@ export default function Register() {
     password: '',
   })
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const { login } = useAuth()
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError('')
+    setLoading(true)
+
     try {
       const res = await registerCitizen(formData)
-
       login(res.access_token)
-
-      navigate('/', { state: { token: res.access_token } })
+      navigate('/')
     } catch (err) {
-      setError(err.message)
+      const detail = err?.response?.data?.detail
+      if (detail) {
+        setError(detail)
+      } else {
+        setError('Ocurrió un error inesperado al registrar.')
+      }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -33,8 +44,14 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center bg-neutral-950 animate-fade-in">
       <div className="bg-neutral-900 p-8 rounded-xl shadow-lg shadow-indigo-800/20 max-w-md w-full space-y-6">
         <h1 className="text-white text-3xl font-bold text-center">Registro</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
 
+        {error && (
+          <div className="text-red-400 bg-red-900/40 border border-red-600 rounded-lg px-4 py-2 text-center text-sm font-medium">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
             name="id"
@@ -77,12 +94,11 @@ export default function Register() {
 
           <button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg transition duration-200"
+            disabled={loading}
+            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-600 text-white py-2 rounded-lg transition"
           >
-            Registrarme
+            {loading ? 'Registrando...' : 'Registrarme'}
           </button>
-
-          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
         </form>
       </div>
     </div>

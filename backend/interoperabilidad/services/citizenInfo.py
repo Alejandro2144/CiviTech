@@ -87,3 +87,25 @@ def unlinkCitizenInCivitech(citizen_id: int):
             detail=f"GovCarpeta devolvió error: {e.response.text}"
         )
 
+def markCitizenAsTransferred(citizen_id: int):
+    url = f"{CIUDADANOS_BASE_URL}/citizens/mark-transferred"
+    payload = {"id": citizen_id}
+
+    try:
+        with httpx.Client() as client:
+            response = client.post(
+                url,
+                json=payload,
+                headers={"Content-Type": "application/json"}
+            )
+            response.raise_for_status()
+    except httpx.RequestError as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"No se pudo contactar el microservicio de ciudadanos: {e}"
+        )
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            status_code=e.response.status_code,
+            detail=f"Error al marcar como transferido: {e.response.text}"
+        )

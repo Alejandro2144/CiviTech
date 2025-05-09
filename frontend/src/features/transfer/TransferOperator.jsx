@@ -11,7 +11,7 @@ export default function TransferOperator() {
   const [error, setError] = useState('')
   const [showToast, setShowToast] = useState(false)
 
-  const { token } = useAuth()
+  const { token, logout } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -19,7 +19,6 @@ export default function TransferOperator() {
       try {
         const res = await interoperabilidadApi.get('/getOperators')
 
-        // Normalizamos los datos
         const normalizedOperators = res.data.map(op => ({
           id: op._id,
           name: op.operatorName,
@@ -44,7 +43,6 @@ export default function TransferOperator() {
     if (!selected) return
 
     const operator = operators.find(op => op.id === selected)
-
     if (!operator) {
       setError('Operador no válido seleccionado.')
       return
@@ -59,6 +57,7 @@ export default function TransferOperator() {
         }
       })
 
+      logout()
       setShowToast(true)
       setTimeout(() => navigate('/'), 3000)
     } catch (err) {
@@ -75,16 +74,13 @@ export default function TransferOperator() {
         <p className="text-center text-gray-400">Selecciona el operador al cual deseas transferirte.</p>
 
         {loading && <p className="text-center text-gray-500">Cargando operadores...</p>}
-
         {!loading && error && <p className="text-center text-red-400">{error}</p>}
-
         {!loading && !error && operators.length === 0 && (
           <p className="text-center text-gray-500">No hay operadores disponibles.</p>
         )}
 
         {!loading && operators.length > 0 && (
           <form onSubmit={handleSubmit} className="space-y-6">
-
             <select
               value={selected}
               onChange={(e) => setSelected(e.target.value)}
@@ -106,13 +102,11 @@ export default function TransferOperator() {
             >
               Transferirme
             </button>
-
           </form>
         )}
-
       </div>
 
-      {showToast && <Toast message="Transferencia exitosa. Saliendo..." onClose={() => setShowToast(false)} />}
+      {showToast && <Toast message="Transferencia exitosa. Cerrando sesión..." onClose={() => setShowToast(false)} />}
     </div>
   )
 }

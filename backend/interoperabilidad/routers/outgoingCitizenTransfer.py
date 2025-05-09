@@ -24,6 +24,9 @@ async def outgoingTransferCitizen(req: InitialTransferPayload, current_user = De
     ## 🚨 IMPORTANTE: Desvincular al ciudadano en GovCarpeta (sin eliminar localmente)
     unlinkCitizenInCivitech(current_user['id'])
 
+    # 🚨 Marcar como transferido en microservicio ciudadano
+    markCitizenAsTransferred(current_user['id'])
+
     ## Se debe preparar la información del ciudadano para enviarla al operador externo.
     # {
     #     "id": citizen['id'],

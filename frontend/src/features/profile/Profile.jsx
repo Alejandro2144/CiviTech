@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getProfile, deleteProfile } from '@/features/auth/authService'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '@/context/AuthContext'
 import Toast from '@/components/ui/Toast'
 
 export default function Profile() {
@@ -9,6 +10,7 @@ export default function Profile() {
   const [showToast, setShowToast] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const navigate = useNavigate()
+  const { logout } = useAuth()
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -28,9 +30,9 @@ export default function Profile() {
   const handleDelete = async () => {
     try {
       await deleteProfile()
+      logout()
       setShowToast(true)
       setShowConfirm(false)
-      setTimeout(() => navigate('/'), 2000)
     } catch (err) {
       setError(err.message)
       setShowConfirm(false)

@@ -10,4 +10,4 @@ class Citizen(Base):
     civi_email = Column(String, unique=True, nullable=False)
     hashed_password = Column(String, nullable=True)
     password_set = Column(Boolean, default=False)
-    is_active = Column(Boolean, default=True)  # Opcional
+    is_transferred = Column(Boolean, default=False)
