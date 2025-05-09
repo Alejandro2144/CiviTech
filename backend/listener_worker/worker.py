@@ -1,12 +1,10 @@
-import os, json, asyncio
+import json, asyncio
 import httpx
 from aio_pika import IncomingMessage
 from rabbitConfig import get_connection, USER_QUEUE, DOC_QUEUE, ID_USER_QUEUE, UPLOAD_CONFIRM_QUEUE, NOTIFY_QUEUE
-
-# URLs de microservicios destino
-CITIZEN_MS_URL  = os.getenv('CITIZEN_MS_URL', 'http://ciudadanos:8001')
-DOCUMENT_MS_URL = os.getenv('DOCUMENT_MS_URL', 'http://documentos:8002')
-INTEROP_MS_URL = os.getenv('INTEROP_MS_URL', 'http://0.0.0.0:8000/confirmTransfer')
+from dotenv import load_dotenv
+from config.constants import CITIZEN_MS_URL, DOCUMENT_MS_URL, INTEROP_MS_URL
+load_dotenv()
 
 async def process_user(msg: IncomingMessage):
     data = json.loads(msg.body)

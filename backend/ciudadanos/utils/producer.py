@@ -2,9 +2,9 @@ import json
 import aio_pika
 from aio_pika import connect_robust
 import os
-
-RABBIT_URL = os.getenv("RABBITMQ_URL", "amqp://guest:guest@rabbitmq/")
-NOTIFY_QUEUE = "notify_citizen"
+from dotenv import load_dotenv
+from config.constants import RABBIT_URL, NOTIFY_QUEUE
+load_dotenv()
 
 async def send_citizen_registered(id, name, email, url):
     conn = await connect_robust(RABBIT_URL)

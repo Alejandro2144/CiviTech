@@ -2,7 +2,6 @@ import json
 from fastapi import HTTPException, status
 import httpx
 from constants import CIUDADANOS_BASE_URL, GOV_CARPETA_BASEURL, OPERATOR_ID, OPERATOR_NAME
-from models import *
 from schemas import *
 
 # Get the citizen info from the citizen microservice
@@ -88,6 +87,3 @@ def unlinkCitizenInCivitech(citizen_id: int):
             detail=f"GovCarpeta devolvió error: {e.response.text}"
         )
 
- 
-
- 

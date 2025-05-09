@@ -1,8 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from services.outgoingTransactions import *
 from services.citizenInfo import *
-from constants import GOV_CARPETA_BASEURL
-from models import *
 from schemas import *
 from services import *
 from utils.dependencies import get_current_user

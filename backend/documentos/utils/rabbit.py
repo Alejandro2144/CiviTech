@@ -1,7 +1,8 @@
 import os
 import aio_pika
-
-RABBIT_URL = os.getenv("RABBITMQ_URL", "amqp://guest:guest@rabbitmq/")
+from dotenv import load_dotenv
+from config.constants import RABBIT_URL
+load_dotenv()
 
 async def get_connection():
     return await aio_pika.connect_robust(RABBIT_URL)
