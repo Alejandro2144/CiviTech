@@ -66,19 +66,18 @@ class CitizenService:
         return citizen, access_token
 
     async def authenticate_citizen(self, email: str, password: str):
-        """
-        Verifica las credenciales del ciudadano y genera token si es válido
-        """
         citizen = self.db.query(Citizen).filter(Citizen.email == email).first()
 
         if not citizen:
             return None, None
 
+        if citizen.is_transferred:
+            raise HTTPException(status_code=403, detail="El ciudadano ya se transfirió de operador.")
+
         if not verify_password(password, citizen.hashed_password):
             return None, None
 
-        # Generar token
-        access_token = await get_token(citizen.id, citizen.email)
+        access_token = await get_token(citizen.id, citizen.name, citizen.email)
 
         return citizen, access_token
     
@@ -109,3 +108,11 @@ class CitizenService:
         self.db.delete(citizen)
         self.db.commit()
         return {"message": "Ciudadano eliminado localmente"}
+
+def mark_as_transferred(self, citizen_id: int):
+    citizen = self.db.query(Citizen).filter(Citizen.id == citizen_id).first()
+    if not citizen:
+        raise Exception("Ciudadano no encontrado")
+
+    citizen.is_transferred = True
+    self.db.commit()

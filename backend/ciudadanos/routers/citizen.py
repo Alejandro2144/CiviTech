@@ -79,3 +79,13 @@ async def delete_citizen(req: UserIdPayload, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
 
     return
+
+@router.post("/mark-transferred", status_code=200)
+async def mark_transferred(req: UserIdPayload, db: Session = Depends(get_db)):
+    citizen = db.query(Citizen).filter(Citizen.id == req.id).first()
+    if not citizen:
+        raise HTTPException(status_code=404, detail="Ciudadano no encontrado")
+
+    citizen.is_transferred = True
+    db.commit()
+    return {"message": "Ciudadano marcado como transferido"}
