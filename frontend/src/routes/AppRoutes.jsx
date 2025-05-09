@@ -6,6 +6,8 @@ import Profile from '@/features/profile/Profile'
 import ProtectedRoute from '@/components/layout/ProtectedRoute'
 import SetPassword from '@/features/auth/SetPassword'
 import TransferOperator from '@/features/transfer/TransferOperator'
+import DocumentViewer from '@/features/documents/DocumentViewer'
+import DocumentsPage from '@/features/documents/DocumentsPage'
 
 export default function AppRoutes() {
   return (
@@ -22,7 +24,17 @@ export default function AppRoutes() {
       <Route path="/transfer" element={
         <ProtectedRoute>
           <TransferOperator />
-      </ProtectedRoute>
+        </ProtectedRoute>
+      } />
+      <Route path="/documents" element={
+        <ProtectedRoute>
+          <DocumentsPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/documents/view/:objectName" element={
+        <ProtectedRoute>
+          <DocumentViewer />
+        </ProtectedRoute>
       } />
     </Routes>
   )
