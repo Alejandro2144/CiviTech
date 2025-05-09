@@ -1,7 +1,6 @@
 from fastapi import HTTPException, status
 import httpx
 from constants import GOV_CARPETA_BASEURL, CIVITECH_CONFIRMATION_API
-from models import *
 from schemas import *
 
 def prepareURLDocuments(urlDict: dict):

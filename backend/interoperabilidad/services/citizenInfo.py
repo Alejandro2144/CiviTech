@@ -1,7 +1,7 @@
 import json
 from fastapi import HTTPException, status
 import httpx
-from constants import CIUDADANOS_BASE_URL, GOV_CARPETA_BASEURL, OPERATOR_ID, OPERATOR_NAME
+from constants import CIUDADANOS_BASE_URL, GOV_CARPETA_BASEURL, OPERATOR_ID, OPERATOR_NAME, DOCUMENT_MS_URL
 from schemas import *
 
 # Get the citizen info from the citizen microservice
