@@ -1,4 +1,5 @@
 import json, asyncio
+import os
 import httpx
 from aio_pika import IncomingMessage
 from rabbitConfig import get_connection, USER_QUEUE, DOC_QUEUE, ID_USER_QUEUE, UPLOAD_CONFIRM_QUEUE, NOTIFY_QUEUE
@@ -6,12 +7,16 @@ from dotenv import load_dotenv
 from config.constants import CITIZEN_MS_URL, DOCUMENT_MS_URL, INTEROP_MS_URL
 load_dotenv()
 
+DOCUMENT_MS_URL = os.getenv("DOCUMENT_MS_URL")
+CITIZEN_MS_URL = os.getenv("CITIZEN_MS_URL")
+INTEROP_MS_URL = os.getenv("INTEROP_MS_URL")
+
 async def process_user(msg: IncomingMessage):
     data = json.loads(msg.body)
 
     # -> Aquí: comunicación HTTP al microservicio ciudadano
     async with httpx.AsyncClient() as client:
-        await client.delete(f"{CITIZEN_MS_URL}/citizens/delete", json=data["id"])
+        await client.delete(CITIZEN_MS_URL+"/citizens/delete", json=data["id"])
     
     print(f"Usuario procesado: {data}", flush=True)
 
@@ -32,8 +37,7 @@ async def process_docs(msg: IncomingMessage):
 
     # -> Aquí: comunicación HTTP al microservicio de documentos
     async with httpx.AsyncClient() as client:
-        await client.post(
-            f"{DOCUMENT_MS_URL}/documents/recepcionInfoDocumentos",
+        await client.post(DOCUMENT_MS_URL+"/documents/recepcionInfoDocumentos",
             json={
                 "id": user_id,
                 "urlDocuments": urls,
@@ -56,7 +60,7 @@ async def process_id_user(msg: IncomingMessage):
         try:
             await client.request(
                 method="DELETE",
-                url=f"{CITIZEN_MS_URL}/citizens/delete",
+                url=CITIZEN_MS_URL+"/citizens/delete",
                 data=json.dumps(id_payload),
                 headers={"Content-Type": "application/json"}
             )
@@ -76,11 +80,14 @@ async def process_id_user(msg: IncomingMessage):
 
     # -> Aquí: comunicación HTTP al microservicio de documentos para borrar 
     #    los documentos de la carpeta con el id como nombre
+
+    print("URL completa:", DOCUMENT_MS_URL + "/documents/delete/folder/" + str(id_payload['id']), flush=True)
+
     async with httpx.AsyncClient() as client:
         try:
             await client.request(
             method="DELETE",
-            url=f"{DOCUMENT_MS_URL}/delete/folder/{id_payload['id']}",
+            url=DOCUMENT_MS_URL+"/documents/delete/folder/"+str(id_payload['id']),
             headers={"Content-Type": "application/json"}
             )
         except httpx.RequestError as e:

@@ -58,6 +58,7 @@ async def list_documents(idCitizen: str):
     Lista los documentos pertenecientes a un ciudadano específico.
     """
     documents = await list_documents_by_citizen(idCitizen)
+    print("Documentos Usuario: ", documents, flush=True)
     if not documents:
         return {"message": "No tienes documentos cargados."}
     return {"documents": documents}

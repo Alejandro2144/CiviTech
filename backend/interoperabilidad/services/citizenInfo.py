@@ -56,9 +56,10 @@ def getCitizenDocuments(citizen_id: int):
             detail=f"Documentos devolvió error: {e.response.text}"
         )
 
+    print("INFO: Documents response:", documents.json(), flush=True)
     #documents = {"URL1": "https://example.com/doc1", "URL2": "https://example.com/doc2"}  # Mocked response
 
-    return documents
+    return documents.json()
 
 def unlinkCitizenInCivitech(citizen_id: int):
     url = f"{GOV_CARPETA_BASEURL}/unregisterCitizen"
