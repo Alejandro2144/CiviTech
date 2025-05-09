@@ -7,9 +7,9 @@ from utils.password_token import generate_set_password_token
 from utils.producer import send_citizen_registered
 from config.db import get_db
 
-router = APIRouter(prefix="/citizens/internal-transfer", tags=["Internal Transfer"])
+router = APIRouter()
 
-@router.post("/")
+@router.post("/citizens/internal-transfer")
 async def receive_citizen(citizen: CitizenBase, db: Session = Depends(get_db)):
 
     existing = db.query(Citizen).filter(Citizen.id == citizen.id).first()
@@ -41,6 +41,9 @@ async def receive_citizen(citizen: CitizenBase, db: Session = Depends(get_db)):
     url = f"https://civitech.com/set-password?token={token}"
 
     # Notificar a interoperabilidad (para notificaciones)
+
+    print(new_citizen, flush=True)
+
     await send_citizen_registered(citizen.id, citizen.name, citizen.email, url)
 
     return {"message": "Ciudadano pre-registrado y notificado"}

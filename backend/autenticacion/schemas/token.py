@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 class TokenRequest(BaseModel):
     id: int
+    name: str
     email: str
 
 class TokenResponse(BaseModel):
@@ -10,5 +11,6 @@ class TokenResponse(BaseModel):
 
 class TokenPayload(BaseModel):
     id: int
+    name: str
     email: str
     exp: int
