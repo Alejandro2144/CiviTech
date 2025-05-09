@@ -22,7 +22,7 @@ class InitialTransferPayload(BaseModel):
 class confirmTransferPayload(BaseModel):
     id: int
     req_status: int
-    confirmAPIURL: str
+    confirmAPI: str
 
 class ConfirmPayload(BaseModel):
     id: int

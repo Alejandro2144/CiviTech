@@ -67,5 +67,5 @@ def sendToExternalOperator(citizen, urlDocuments, transferAPIURL):
             status_code=e.response.status_code,
             detail=f"Upstream service returned error: {e.response.text}"
         )'''
-    data = payload
-    return data
+    
+    return payload

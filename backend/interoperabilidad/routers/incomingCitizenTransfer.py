@@ -25,7 +25,7 @@ async def confirmTransfer(req: confirmTransferPayload):
     Confirm the transfer of a citizen to an external operator.
     """
     # Call the external operator's API to confirm the transfer
-    url = req.confirmAPIURL
+    confirmAPI = req.confirmAPI
     
     payload = {
         "id": req.id,
@@ -37,9 +37,13 @@ async def confirmTransfer(req: confirmTransferPayload):
     try:
         # synchronous HTTP client
         with httpx.Client() as client:
-            response = client.post(url, json=payload_json)
-            response.raise_for_status()
-            data = response.json()
+            
+            await client.request(
+            method="POST",
+            url=confirmAPI,
+            data=payload_json,
+            headers={"Content-Type": "application/json"}
+    )
     except httpx.RequestError as e:
         # network or connection error
         raise HTTPException(
@@ -52,8 +56,6 @@ async def confirmTransfer(req: confirmTransferPayload):
             status_code=e.response.status_code,
             detail=f"Upstream service returned error: {e.response.text}"
         )
-
-    return data
 
 ## This endpoint is called by the external operator to confirm the correct 
 ## receive of the citizen transfer and documents upload.

@@ -35,9 +35,13 @@ async def outgoingTransferCitizen(req: InitialTransferPayload, current_user = De
     #
     ## Se debe obtener la lista de documentos del ciudadano para enviarlos al operador externo.
 
-    urlDocuments = getCitizenDocuments(current_user['id'])
+    urlDocumentsUnprepared = getCitizenDocuments(current_user['id'])
 
-    print("INFO: Citizen documents retrieved:", urlDocuments, flush=True)
+    print("INFO: Citizen documents retrieved:", urlDocumentsUnprepared, flush=True)
+
+    urlDocuments = prepareURLDocuments(urlDocumentsUnprepared)
+
+    print("INFO: Citizen documents prepared:", urlDocuments, flush=True)
 
     print("Current user:", current_user["id"], flush=True)
 

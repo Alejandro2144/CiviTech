@@ -1,7 +1,7 @@
 import json
 from fastapi import HTTPException, status
 import httpx
-from constants import CIUDADANOS_BASE_URL, GOV_CARPETA_BASEURL, OPERATOR_ID, OPERATOR_NAME
+from constants import CIUDADANOS_BASE_URL, GOV_CARPETA_BASEURL, OPERATOR_ID, OPERATOR_NAME, DOCUMENT_MS_URL
 from models import *
 from schemas import *
 
@@ -35,27 +35,29 @@ def getCitizenInfo():
 
 def getCitizenDocuments(citizen_id: int):
     
-    '''url = f"/citizen/{citizen_id}/documents"
+    documents_api = f"{DOCUMENT_MS_URL}/list/{citizen_id}"
 
+    # llamar a la API del microservicio de documentos para obtener la lista de documentos
+    # del ciudadano
+    
     try:
-        # synchronous HTTP client
         with httpx.Client() as client:
-            response = client.get(url)
-            response.raise_for_status()
-            documents = response.json()
+            documents = client.request(
+                method="GET",
+                url=documents_api
+            )
     except httpx.RequestError as e:
-        # network or connection error
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Error contacting upstream service: {e}"
+            detail=f"Error contactando Documents: {e}"
         )
     except httpx.HTTPStatusError as e:
-        # non-2xx status codes
         raise HTTPException(
             status_code=e.response.status_code,
-            detail=f"Upstream service returned error: {e.response.text}"
-        )'''
-    documents = {"URL1": "https://example.com/doc1", "URL2": "https://example.com/doc2"}  # Mocked response
+            detail=f"Documentos devolvió error: {e.response.text}"
+        )
+
+    #documents = {"URL1": "https://example.com/doc1", "URL2": "https://example.com/doc2"}  # Mocked response
 
     return documents
 

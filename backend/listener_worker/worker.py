@@ -5,7 +5,7 @@ from rabbitConfig import get_connection, USER_QUEUE, DOC_QUEUE, ID_USER_QUEUE, U
 
 # URLs de microservicios destino
 CITIZEN_MS_URL  = os.getenv('CITIZEN_MS_URL', 'http://ciudadanos:8001')
-DOCUMENT_MS_URL = os.getenv('DOCUMENT_MS_URL', 'http://documentos:8002')
+DOCUMENT_MS_URL = os.getenv('DOCUMENT_MS_URL', 'http://documentos:8002/documents')
 INTEROP_MS_URL = os.getenv('INTEROP_MS_URL', 'http://0.0.0.0:8000/confirmTransfer')
 
 async def process_user(msg: IncomingMessage):
@@ -23,16 +23,24 @@ async def process_docs(msg: IncomingMessage):
     payload = json.loads(msg.body)
     user_id = payload['id']
     urls = payload['urlDocuments']
+    confirmAPI = payload['confirmAPI']
+
+    '''docs_payload = {
+        "id": user_id,
+        "urlDocuments": urls,
+        "confirmAPI": confirmAPI
+    }'''
+
 
     # -> Aquí: comunicación HTTP al microservicio de documentos
     async with httpx.AsyncClient() as client:
         await client.post(
             f"{DOCUMENT_MS_URL}/documents/recepcionInfoDocumentos",
             json={
-            "id": user_id,
-            "urlDocuments": urls,
-            "confirmAPI": "http://example.com/api/transferCitizenConfirm"  # cambia si tienes una real
-        }
+                "id": user_id,
+                "urlDocuments": urls,
+                "confirmAPI": confirmAPI  # cambia si tienes una real
+            }
         )
     
     print(f"Documentos procesados para el usuario {user_id}: {urls}", flush=True)
@@ -47,20 +55,48 @@ async def process_id_user(msg: IncomingMessage):
 
     # -> Aquí: comunicación HTTP al microservicio ciudadano para borrar el usuario
     async with httpx.AsyncClient() as client:
-        await client.request(
-        method="DELETE",
-        url=f"{CITIZEN_MS_URL}/citizens/delete",
-        data=json.dumps(id_payload),
-        headers={"Content-Type": "application/json"}
-        )
+        try:
+            await client.request(
+                method="DELETE",
+                url=f"{CITIZEN_MS_URL}/citizens/delete",
+                data=json.dumps(id_payload),
+                headers={"Content-Type": "application/json"}
+            )
+        except httpx.RequestError as e:
+            print(f"Error contactando el microservicio de ciudadanos: {e}", flush=True)
+            await msg.reject(requeue=False)
+            return
+        except httpx.HTTPStatusError as e:
+            print(f"Error en la respuesta del microservicio de ciudadanos: {e}", flush=True)
+            await msg.reject(requeue=False)
+            return
+        except Exception as e:
+            print(f"Error inesperado: {e}", flush=True)
+            await msg.reject(requeue=False)
+            return
+        
 
     # -> Aquí: comunicación HTTP al microservicio de documentos para borrar 
     #    los documentos de la carpeta con el id como nombre
-    '''async with httpx.AsyncClient() as client:
-        await client.post(
-            f"{DOCUMENT_MS_URL}/api/documents/process",
-            json={"id": user_id, "urls": urls}
-        )'''
+    async with httpx.AsyncClient() as client:
+        try:
+            await client.request(
+            method="DELETE",
+            url=f"{DOCUMENT_MS_URL}/delete/folder/{id_payload['id']}",
+            headers={"Content-Type": "application/json"}
+            )
+        except httpx.RequestError as e:
+            print(f"Error contactando el microservicio de ciudadanos: {e}", flush=True)
+            await msg.reject(requeue=False)
+            return
+        except httpx.HTTPStatusError as e:
+            print(f"Error en la respuesta del microservicio de ciudadanos: {e}", flush=True)
+            await msg.reject(requeue=False)
+            return
+        except Exception as e:
+            print(f"Error inesperado: {e}", flush=True)
+            await msg.reject(requeue=False)
+            return
     
     print(f"ID Usuario Eliminado de BD y bucket: {id_payload['id']}", flush=True)
     
@@ -71,11 +107,23 @@ async def process_confirmation(msg: IncomingMessage):
 
     # -> Aquí: comunicación HTTP al microservicio ciudadano para borrar el usuario
     async with httpx.AsyncClient() as client:
-        await client.post(INTEROP_MS_URL, json=confirmation_payload)
+        await client.request(
+        method="POST",
+        url=INTEROP_MS_URL,
+        data=json.dumps({
+                            "id": confirmation_payload['id'], 
+                            "req_status": confirmation_payload['req_status'],
+                            "confirmAPI": confirmation_payload['confirmAPI']
+                        }),
+        headers={"Content-Type": "application/json"}
+        )
 
-    print(f"ID Usuario Cargado a BD y bucket: {confirmation_payload['id']}")
+    print(f"Usuario cargado a bucket: {confirmation_payload['id']}")
     
     await msg.ack()
+
+    
+
 
 
 
