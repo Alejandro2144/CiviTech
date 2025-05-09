@@ -4,6 +4,7 @@ const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null)
+  const [user, setUser] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -13,6 +14,7 @@ export const AuthProvider = ({ children }) => {
       const payload = parseToken(storedToken)
       if (payload && payload.exp * 1000 > Date.now()) {
         setToken(storedToken)
+        setUser(payload) // Guardar la información del usuario
         setIsAuthenticated(true)
       } else {
         logout()
@@ -40,17 +42,20 @@ export const AuthProvider = ({ children }) => {
   const login = (newToken) => {
     localStorage.setItem('token', newToken)
     setToken(newToken)
+    const userData = parseToken(newToken)
+    setUser(userData) // Guardar la información del usuario
     setIsAuthenticated(true)
   }
 
   const logout = () => {
     localStorage.removeItem('token')
     setToken(null)
+    setUser(null) // Limpiar la información del usuario
     setIsAuthenticated(false)
   }
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated, login, logout, loading }}>
+    <AuthContext.Provider value={{ token, user, isAuthenticated, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   )

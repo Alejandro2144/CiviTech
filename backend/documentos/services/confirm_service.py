@@ -2,7 +2,7 @@ import json
 import aio_pika
 from utils.rabbit import get_connection
 
-CONFIRMATION_QUEUE = "transferencias_confirmadas"  # Nombre de la cola donde interoperabilidad escucha confirmaciones
+UPLOAD_CONFIRM_QUEUE = "upload_confirm_queue"  # Nombre de la cola donde interoperabilidad escucha confirmaciones
 
 async def publish_confirmation_message(id_citizen: str, confirm_api: str, status: str = "1"):
     """
@@ -19,14 +19,12 @@ async def publish_confirmation_message(id_citizen: str, confirm_api: str, status
     connection = await get_connection()
     channel = await connection.channel()
 
-    await channel.declare_queue(CONFIRMATION_QUEUE, durable=True)
-
     await channel.default_exchange.publish(
         aio_pika.Message(
             body=json.dumps(confirmation_payload).encode(),
             delivery_mode=aio_pika.DeliveryMode.PERSISTENT
         ),
-        routing_key=CONFIRMATION_QUEUE
+        routing_key=UPLOAD_CONFIRM_QUEUE
     )
 
     await connection.close()

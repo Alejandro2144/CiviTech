@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import Toast from '@/components/ui/Toast'
-import { LogIn, UserPlus, User, LogOut, MoveRight } from 'lucide-react'
+import { LogIn, UserPlus, User, LogOut, MoveRight, File } from 'lucide-react' // Añadir ícono File
 
 export default function Navbar() {
   const { isAuthenticated, logout } = useAuth()
@@ -62,6 +62,19 @@ export default function Navbar() {
                 >
                   <User className="w-5 h-5" />
                   Perfil
+                </NavLink>
+
+                {/* Nuevo enlace para Documentos */}
+                <NavLink
+                  to="/documents"
+                  className={({ isActive }) =>
+                    isActive
+                      ? 'text-gray-300 font-semibold flex items-center gap-2'
+                      : 'text-white hover:text-gray-300 transition flex items-center gap-2'
+                  }
+                >
+                  <File className="w-5 h-5" />
+                  Documentos
                 </NavLink>
 
                 <NavLink
