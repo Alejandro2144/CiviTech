@@ -5,3 +5,5 @@ python-multipart
 requests
 httpx
 python-dotenv
+aio-pika
+aiohttp

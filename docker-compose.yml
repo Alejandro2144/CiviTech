@@ -112,6 +112,38 @@ services:
 volumes:
   rabbitmq-data:
 
+  listener_worker:
+    build:
+      context: ./backend/listener_worker
+      dockerfile: Dockerfile
+    container_name: listener_worker
+    depends_on:
+      - documentos
+      - rabbitmq
+    env_file:
+      - ./backend/listener_worker/.env
+    restart: unless-stopped
+  
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  rabbitmq-data:
+
 networks:
   default:
     driver: bridge
