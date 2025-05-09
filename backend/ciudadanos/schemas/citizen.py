@@ -24,3 +24,6 @@ class CitizenProfileResponse(CitizenBase):
 class CitizenLogin(BaseModel):
     email: EmailStr
     password: str
+
+class UserIdPayload(BaseModel):
+    id: int

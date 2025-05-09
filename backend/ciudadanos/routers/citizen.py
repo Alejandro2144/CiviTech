@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from schemas.citizen import CitizenCreate, CitizenResponse, CitizenLogin, CitizenProfileResponse
+from schemas.citizen import CitizenCreate, CitizenResponse, CitizenLogin, CitizenProfileResponse, UserIdPayload
 from services.citizen_service import CitizenService
 from utils.dependencies import get_current_citizen
 from config.db import get_db
 from models.citizen import Citizen
+from utils.govcarpeta_client import GovCarpetaClient
 
 router = APIRouter(prefix="/citizens", tags=["Citizens"])
 
@@ -63,19 +64,28 @@ async def delete_my_account(current_citizen: Citizen = Depends(get_current_citiz
 
     return
 
-@router.put("/transfer", status_code=204)
-async def transfer_citizen(current_citizen: Citizen = Depends(get_current_citizen), db: Session = Depends(get_db)):
+@router.delete("/delete", status_code=204)
+async def delete_citizen(req: UserIdPayload, db: Session = Depends(get_db)):
     """
-    Elimina al ciudadano autenticado tras solicitar transferencia.
+    Elimina un ciudadano localmente
     """
-    citizen = db.query(Citizen).filter(Citizen.id == current_citizen.id).first()
+    service = CitizenService(db)
 
-    if not citizen:
-        raise HTTPException(status_code=404, detail="Ciudadano no encontrado")
+    print("INFO: Trying to delete citizen with ID:", req.id, flush=True)
 
-    # Eliminar ciudadano
-    db.delete(citizen)
-    db.commit()
+    try:
+        await service.delete_citizen_db(req.id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     return
 
+@router.post("/mark-transferred", status_code=200)
+async def mark_transferred(req: UserIdPayload, db: Session = Depends(get_db)):
+    citizen = db.query(Citizen).filter(Citizen.id == req.id).first()
+    if not citizen:
+        raise HTTPException(status_code=404, detail="Ciudadano no encontrado")
+
+    citizen.is_transferred = True
+    db.commit()
+    return {"message": "Ciudadano marcado como transferido"}

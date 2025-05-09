@@ -23,8 +23,10 @@ async def publishUserTransferMessages(req):
     await conn.close()
 
 async def publishUserIDConfirmationMessages(req):
-
+    id_payload = json.dumps({
+        "id": req.id,
+    }).encode()
     conn = await get_connection()
     channel = await conn.channel()
-    await channel.default_exchange.publish(Message(req.id), routing_key=ID_USER_QUEUE)
+    await channel.default_exchange.publish(Message(id_payload), routing_key=ID_USER_QUEUE)
     await conn.close()

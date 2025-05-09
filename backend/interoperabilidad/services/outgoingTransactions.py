@@ -1,7 +1,6 @@
 from fastapi import HTTPException, status
 import httpx
 from constants import GOV_CARPETA_BASEURL, CIVITECH_CONFIRMATION_API
-from models import *
 from schemas import *
 
 # Get the list of active external operators
@@ -49,7 +48,7 @@ def sendToExternalOperator(citizen, urlDocuments, transferAPIURL):
         "confirmAPIURL": CIVITECH_CONFIRMATION_API
     }
     # Enviar el payload al operador externo
-    try:
+    '''try:
         # synchronous HTTP client
         with httpx.Client() as client:
             response = client.post(transferAPIURL, json=payload)
@@ -66,5 +65,6 @@ def sendToExternalOperator(citizen, urlDocuments, transferAPIURL):
         raise HTTPException(
             status_code=e.response.status_code,
             detail=f"Upstream service returned error: {e.response.text}"
-        )
+        )'''
+    data = payload
     return data

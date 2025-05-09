@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 export const interoperabilidadApi = axios.create({
-  baseURL: 'http://localhost:8003', // Puerto del servicio de interoperabilidad
+  baseURL: 'http://localhost:8003', // Cambia esto si es necesario
 })
 
 interoperabilidadApi.interceptors.request.use(config => {
@@ -15,9 +15,11 @@ interoperabilidadApi.interceptors.response.use(
   error => {
     if (error.response?.status === 403) {
       localStorage.removeItem('token')
-      localStorage.setItem('logout_reason', 'expired')
+      localStorage.setItem('logout_reason', 'expired') 
       window.location.href = '/login'
     }
     return Promise.reject(error)
   }
 )
+
+

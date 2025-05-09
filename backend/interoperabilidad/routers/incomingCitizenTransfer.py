@@ -1,11 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from services.outgoingTransactions import *
-# from backend.interoperabilidad.services.outgoingTransactions import *
-from constants import GOV_CARPETA_BASEURL
-from models import *
 from schemas import *
 from services import *
-
 
 citizenReceiving = APIRouter()
 

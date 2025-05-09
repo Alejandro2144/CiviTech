@@ -1,15 +1,15 @@
+import json
 from fastapi import HTTPException, status
 import httpx
-from constants import GOV_CARPETA_BASEURL
-from models import *
+from constants import CIUDADANOS_BASE_URL, GOV_CARPETA_BASEURL, OPERATOR_ID, OPERATOR_NAME
 from schemas import *
 
 # Get the citizen info from the citizen microservice
 
 def getCitizenInfo():
 
-    url = "http://citizen-microservice:8000/citizen"
-    
+    url = CIUDADANOS_BASE_URL + "/citizens/profile"
+
     try:
         # synchronous HTTP client
         with httpx.Client() as client:
@@ -33,8 +33,9 @@ def getCitizenInfo():
 
 
 def getCitizenDocuments(citizen_id: int):
-    url = f"/citizen/{citizen_id}/documents"
     
+    '''url = f"/citizen/{citizen_id}/documents"
+
     try:
         # synchronous HTTP client
         with httpx.Client() as client:
@@ -52,6 +53,59 @@ def getCitizenDocuments(citizen_id: int):
         raise HTTPException(
             status_code=e.response.status_code,
             detail=f"Upstream service returned error: {e.response.text}"
-        )
+        )'''
+    documents = {"URL1": "https://example.com/doc1", "URL2": "https://example.com/doc2"}  # Mocked response
 
     return documents
+
+def unlinkCitizenInCivitech(citizen_id: int):
+    url = f"{GOV_CARPETA_BASEURL}/unregisterCitizen"
+
+    payload = {
+        "id": citizen_id,
+        "operatorId": OPERATOR_ID,
+        "operatorName": OPERATOR_NAME
+    }
+
+    try:
+        with httpx.Client() as client:
+            response = client.request(
+                method="DELETE",
+                url=url,
+                data=json.dumps(payload),
+                headers={"Content-Type": "application/json"}
+            )
+            response.raise_for_status()
+    except httpx.RequestError as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Error contactando GovCarpeta: {e}"
+        )
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            status_code=e.response.status_code,
+            detail=f"GovCarpeta devolvió error: {e.response.text}"
+        )
+
+def markCitizenAsTransferred(citizen_id: int):
+    url = f"{CIUDADANOS_BASE_URL}/citizens/mark-transferred"
+    payload = {"id": citizen_id}
+
+    try:
+        with httpx.Client() as client:
+            response = client.post(
+                url,
+                json=payload,
+                headers={"Content-Type": "application/json"}
+            )
+            response.raise_for_status()
+    except httpx.RequestError as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"No se pudo contactar el microservicio de ciudadanos: {e}"
+        )
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            status_code=e.response.status_code,
+            detail=f"Error al marcar como transferido: {e.response.text}"
+        )
