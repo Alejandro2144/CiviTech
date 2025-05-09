@@ -33,32 +33,38 @@ export default function DocumentsPage() {
     try {
       setLoading(true);
       
-      // Verificar si tenemos información del usuario
-      if (!user) {
-        console.error("No hay información de usuario disponible");
-        setError("No se pudo obtener información del usuario. Por favor inicia sesión nuevamente.");
+      // Extraer información del usuario directamente del token
+      if (!token) {
+        console.error("No hay token disponible");
+        setError("Por favor inicia sesión nuevamente.");
         setLoading(false);
         return;
       }
 
-      // Obtener el ID del usuario desde el objeto user
-      const userId = user.sub || user.id || user.citizen_id;
-      
-      if (!userId) {
-        console.error("El ID del usuario no está presente en el token");
-        setError("No se pudo identificar al usuario. Por favor inicia sesión nuevamente.");
-        setLoading(false);
-        return;
-      }
+     // Obtener el ID del usuario desde el token
+     let userId;
+     try {
+       const payload = JSON.parse(atob(token.split('.')[1]));
+       userId = payload.sub || payload.id || payload.citizen_id;
+       
+       if (!userId) {
+         throw new Error("El ID del usuario no está presente en el token");
+       }
+     } catch (e) {
+       console.error("Error decodificando token:", e);
+       setError("No se pudo identificar al usuario. Por favor inicia sesión nuevamente.");
+       setLoading(false);
+       return;
+     }
 
-      console.log("Obteniendo documentos para el usuario:", userId);
+     console.log("Obteniendo documentos para el usuario:", userId);
 
-      const response = await fetch(`${backendUrl}/documents/list/${userId}`, {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-          'Content-Type': 'application/json'
-        }
-      });
+     const response = await fetch(`${backendUrl}/documents/list/${userId}`, {
+       headers: {
+         'Authorization': `Bearer ${token}`,
+         'Content-Type': 'application/json'
+       }
+     });
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -100,7 +106,10 @@ export default function DocumentsPage() {
       setUploading(true);
       setUploadError(null);
       
-      const userId = user.sub || user.id || user.citizen_id;
+      // Extraer userId del token
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const userId = payload.sub || payload.id || payload.citizen_id;
+      
       if (!userId) {
         throw new Error("ID de usuario no disponible");
       }
@@ -158,6 +167,11 @@ export default function DocumentsPage() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleCancelUpdate = () => {
+    setShowUpdateConfirm(false);
+    setUploadError(null);
   };
 
   const handleDeleteDocument = async (objectName) => {
@@ -361,6 +375,24 @@ export default function DocumentsPage() {
           {uploadError && (
             <div className="bg-red-500/20 border border-red-400 text-red-100 px-4 py-2 rounded-md mt-4 text-sm">
               {uploadError}
+              {showUpdateConfirm && (
+                <div className="mt-2 flex gap-2">
+                  <button 
+                    type="button" 
+                    onClick={handleUploadDocument} 
+                    className="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-xs"
+                  >
+                    Sí, actualizar
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={handleCancelUpdate} 
+                    className="bg-neutral-600 hover:bg-neutral-500 text-white px-3 py-1 rounded text-xs"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              )}
             </div>
           )}
           
