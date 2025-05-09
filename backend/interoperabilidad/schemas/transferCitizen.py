@@ -1,7 +1,4 @@
-
-from typing import List
-from pydantic import BaseModel, HttpUrl
-
+from pydantic import BaseModel
 
 class TransferPayload(BaseModel):
     id: int
@@ -9,7 +6,6 @@ class TransferPayload(BaseModel):
     citizenEmail: str
     urlDocuments: dict
     confirmAPI: str
-
 
 class UserDataPayload(BaseModel):
     id: int

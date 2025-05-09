@@ -1,4 +1,3 @@
-import os
 import httpx
 from dotenv import load_dotenv
 from fastapi import HTTPException
@@ -18,4 +17,3 @@ async def validate_token_remote(token: str) -> dict:
         return response.json()
 
     raise HTTPException(status_code=403, detail="Token inválido o expirado")
- 

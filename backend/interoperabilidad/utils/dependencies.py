@@ -11,4 +11,3 @@ async def get_current_user(
     payload = await validate_token_remote(token)
     return payload  # contiene id, email, exp
 
- 

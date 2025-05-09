@@ -6,6 +6,8 @@ from utils.govcarpeta_client import GovCarpetaClient
 from utils.password_token import generate_set_password_token
 from utils.producer import send_citizen_registered
 from config.db import get_db
+from dotenv import load_dotenv
+from config.constants import CIVITECH_BASE_URL
 
 router = APIRouter()
 
@@ -38,7 +40,10 @@ async def receive_citizen(citizen: CitizenBase, db: Session = Depends(get_db)):
 
     # Generar token URL
     token = generate_set_password_token(citizen.id, citizen.email)
-    url = f"https://civitech.com/set-password?token={token}"
+
+    load_dotenv()
+
+    url = f"{CIVITECH_BASE_URL}/set-password?token={token}"
 
     # Notificar a interoperabilidad (para notificaciones)
 

@@ -1,8 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from services.outgoingTransactions import *
 from services.citizenInfo import *
-from constants import GOV_CARPETA_BASEURL
-from models import *
 from schemas import *
 from services import *
 from utils.dependencies import get_current_user
@@ -25,6 +23,9 @@ async def outgoingTransferCitizen(req: InitialTransferPayload, current_user = De
 
     ## 🚨 IMPORTANTE: Desvincular al ciudadano en GovCarpeta (sin eliminar localmente)
     unlinkCitizenInCivitech(current_user['id'])
+
+    # 🚨 Marcar como transferido en microservicio ciudadano
+    markCitizenAsTransferred(current_user['id'])
 
     ## Se debe preparar la información del ciudadano para enviarla al operador externo.
     # {
