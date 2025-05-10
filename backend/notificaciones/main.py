@@ -1,13 +1,9 @@
 from fastapi import FastAPI
-from app.routers import example
+from routers import *
 
-app = FastAPI(
-    title="CiviTech",
-    description="This project is intended to the Civitech project for advanced software architectures.",
-    version="0.1.0",
-)
+app = FastAPI(title="Notificaciones - CiviTech")
 
-app.include_router(example.router)
+app.include_router(notificationsRouter)
 
 @app.get("/")
 def read_root():

@@ -1,3 +1,4 @@
+import json
 from fastapi import HTTPException, status
 import httpx
 from constants import GOV_CARPETA_BASEURL, CIVITECH_CONFIRMATION_API
@@ -7,6 +8,7 @@ from schemas import *
 
 def getExternalOperatorsList():
     url = f"{GOV_CARPETA_BASEURL}/getOperators"
+
     try:
         # synchronous HTTP client
         with httpx.Client() as client:
@@ -48,6 +50,25 @@ def sendToExternalOperator(citizen, urlDocuments, transferAPIURL):
         "confirmAPIURL": CIVITECH_CONFIRMATION_API
     }
     # Enviar el payload al operador externo
+
+    with httpx.Client() as client:
+        try:
+            client.request(
+            method="POST",
+            url=payload['confirmAPIURL'],
+            data=json.dumps(payload),
+            headers={"Content-Type": "application/json"}
+            )
+        except httpx.RequestError as e:
+            print(f"Error contactando el microservicio de ciudadanos: {e}", flush=True)
+            return
+        except httpx.HTTPStatusError as e:
+            print(f"Error en la respuesta del microservicio de ciudadanos: {e}", flush=True)
+            return
+        except Exception as e:
+            print(f"Error inesperado: {e}", flush=True)
+            return
+
     '''try:
         # synchronous HTTP client
         with httpx.Client() as client:
