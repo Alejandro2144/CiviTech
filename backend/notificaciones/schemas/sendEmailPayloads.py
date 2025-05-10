@@ -10,5 +10,6 @@ class PasswordEmailPayload(BaseModel):
 class InFileActionEmailPayload(BaseModel):
     action: str
     citizenEmail: str
-    action: str
+    citizenName: str
+    fileAction: str
     fileName: str

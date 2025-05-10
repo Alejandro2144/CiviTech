@@ -1,14 +1,21 @@
 from datetime import timedelta
 import mimetypes
 from fastapi import HTTPException
+from services.notify_action_service import publish_notification_message
 from config.minio_client import get_minio_client
 from utils.govcarpeta_client import GovCarpetaClient
 from schemas.document_schema import DocumentMetadata
-import io
+import io, os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
 
 bucket_name = "documents"
 
-async def upload_document(file_data: bytes, original_filename: str, metadata: DocumentMetadata, force_update: bool = False):
+async def upload_document(file_data: bytes, original_filename: str, metadata: DocumentMetadata, user: dict, force_update: bool = False):
     client = get_minio_client()
     ensure_bucket_exists(client, bucket_name="documents")
 
@@ -51,6 +58,13 @@ async def upload_document(file_data: bytes, original_filename: str, metadata: Do
 
     # Volver a subir metadata si cambia por autenticación
     upload_to_minio(client, bucket_name, final_filename, file_data, prepare_object_metadata(metadata))
+
+    await publish_notification_message(
+        CitizenName=user["name"],
+        CitizenEmail=user["email"],
+        fileAction="carga",
+        fileName=final_filename
+    )
 
     return {
         "message": "Documento cargado o actualizado y autenticado correctamente.",
@@ -95,11 +109,26 @@ async def list_documents_by_citizen(idCitizen: str):
 
     return found_documents
 
-async def delete_document(object_name: str):
+async def delete_document(object_name: str, user: dict = None):
     client = get_minio_client()
     try:
+        # Obtener metadata del objeto
+        stat = client.stat_object(bucket_name="documents", object_name=object_name)
+        metadata = stat.metadata
+        title = metadata.get("x-amz-meta-documentTitle", object_name)
+
+        # Eliminar el documento               
         client.remove_object(bucket_name="documents", object_name=object_name)
+
+        if user:
+            await publish_notification_message(
+                CitizenName=user["name"],
+                CitizenEmail=user["email"],
+                fileAction="eliminado",
+                fileName=title
+            )
         return {"message": f"Documento '{object_name}' eliminado correctamente."}
+    
     except Exception as e:
         print(f"[ERROR] Error eliminando documento: {e}")
         raise HTTPException(status_code=500, detail="Error eliminando documento. Reintente más tarde.")

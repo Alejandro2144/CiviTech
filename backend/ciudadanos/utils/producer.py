@@ -1,29 +1,30 @@
 import json
 import aio_pika
-from aio_pika import connect_robust
-import os
 from dotenv import load_dotenv
 from config.constants import RABBIT_URL, NOTIFY_QUEUE
+from utils.rabbit import get_connection
 load_dotenv()
 
-async def send_citizen_registered(id, name, email, url):
-    conn = await connect_robust(RABBIT_URL)
-    chan = await conn.channel()
-
-    await chan.declare_queue(NOTIFY_QUEUE, durable=True)
+async def send_citizen_registered(name, email, url):
 
     payload = json.dumps({
-        "id": id,
-        "name": name,
-        "email": email,
-        "set_password_url": url
+        "action": "set_password",
+        "citizenName": name,
+        "citizenEmail": email,
+        "passwordSetURL": url
     }).encode()
 
     print("🚀 Enviando a notify_citizen:", payload)
 
-    await chan.default_exchange.publish(
-        aio_pika.Message(payload),
+    connection = await get_connection()
+    channel = await connection.channel()
+
+    await channel.default_exchange.publish(
+        aio_pika.Message(
+            body=payload,
+            delivery_mode=aio_pika.DeliveryMode.PERSISTENT
+        ),
         routing_key=NOTIFY_QUEUE
     )
 
-    await conn.close()
+    await connection.close()

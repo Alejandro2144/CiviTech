@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 export const interoperabilidadApi = axios.create({
-  baseURL: 'http://localhost:8003', // Cambia esto si es necesario
+  baseURL: 'http://localhost:8004',
 })
 
 interoperabilidadApi.interceptors.request.use(config => {

@@ -93,7 +93,7 @@ services:
     environment:
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq/
     ports:
-      - "8003:8000"   # <== Cambiado el puerto para evitar conflicto
+      - "8004:8000"  
     restart: unless-stopped
 
   listener_worker:
@@ -108,6 +108,16 @@ services:
     environment:
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq/
     restart: unless-stopped
+
+  notificaciones:
+      build: ./backend/notificaciones
+      container_name: notificaciones
+      ports:
+        - "8003:8003"
+      env_file:
+        - ./backend/notificaciones/.env
+      depends_on:
+        - rabbitmq
 
 volumes:
   rabbitmq-data:
