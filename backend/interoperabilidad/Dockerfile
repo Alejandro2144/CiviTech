@@ -1,20 +1,33 @@
-# Use an official Python runtime as a parent image
-FROM python:3.10-slim
+# ─── Base image ─────────────────────────────────────────────────────────
+FROM python:3.11-slim
 
-# Set the working directory in the container
+# ─── Directorio de trabajo ─────────────────────────────────────────────
 WORKDIR /app
+ENV PYTHONUNBUFFERED=1
 
-# Copy the requirements file into the container
+# ─── Instalación de dependencias ───────────────────────────────────────
 COPY requirements.txt .
+RUN pip install --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy the rest of the application code into the container
+# ─── Código de la aplicación ───────────────────────────────────────────
 COPY . .
 
-# Expose the port the app runs on
-EXPOSE 8000
+# ─── Puerto configurable ────────────────────────────────────────────────
+ARG PORT=8003       # 📌 Cámbialo aquí si Interoperabilidad usa otro puerto
+ENV PORT=${PORT}
+EXPOSE ${PORT}
 
-# Command to run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# ─── URLs de otros servicios ────────────────────────────────────────────
+# 📌 Ajusta si cambias puertos o hosts
+ENV CITIZEN_MS_URL=http://localhost:8001
+ENV AUTH_MS_URL=http://localhost:8000
+ENV DOCUMENT_MS_URL=http://localhost:8002
+
+# ─── Variables externas ────────────────────────────────────────────────
+ENV RABBIT_URL=amqp://localhost
+ENV MINIO_ENDPOINT=http://localhost:9000
+
+# ─── Inicio de la aplicación ───────────────────────────────────────────
+ENTRYPOINT ["sh","-c"]
+CMD ["uvicorn main:app --host 0.0.0.0 --port $PORT"]

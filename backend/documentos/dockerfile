@@ -1,18 +1,31 @@
-# Imagen base oficial de Python
+# ─── Base image ─────────────────────────────────────────────────────────
 FROM python:3.11-slim
 
-# Establecer el directorio de trabajo dentro del contenedor
+# ─── Directorio de trabajo ─────────────────────────────────────────────
 WORKDIR /app
+ENV PYTHONUNBUFFERED=1
 
-# Copiar e instalar dependencias
+# ─── Instalación de dependencias ───────────────────────────────────────
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt
 
-# Copiar el resto del proyecto
+# ─── Código de la aplicación ───────────────────────────────────────────
 COPY . .
 
-# Exponer el puerto que FastAPI usará
-EXPOSE 8001
+# ─── Puerto configurable ────────────────────────────────────────────────
+ARG PORT=8002             # 📌 Cámbialo si Documentos corre en otro puerto
+ENV PORT=${PORT}
+EXPOSE ${PORT}
 
-# Comando para iniciar el servicio
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8002"]
+# ─── Variables externas ────────────────────────────────────────────────
+# 📌 Si tu servicio de Ciudadanos no está en localhost:8001, ajusta esta URL
+ENV CITIZEN_MS_URL=http://localhost:8001
+# 📌 Ajusta RABBIT_URL y MINIO_ENDPOINT según tus entornos locales o Kubernetes
+ENV RABBIT_URL=amqp://localhost
+ENV MINIO_ENDPOINT=http://localhost:9000
+
+# ─── Inicio de la aplicación ───────────────────────────────────────────
+ENTRYPOINT ["sh","-c"]
+CMD ["uvicorn main:app --host 0.0.0.0 --port $PORT"]
+

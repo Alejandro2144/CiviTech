@@ -1,18 +1,30 @@
-# Imagen base oficial de Python
+# ─── Base image ────────────────────────────────────────────────────────────────
 FROM python:3.11-slim
+# 📌 Aquí: si quieres otra versión de Python, cámbiala arriba.
 
-# Establecer el directorio de trabajo dentro del contenedor
+# ─── Configuración del contenedor ─────────────────────────────────────────────
 WORKDIR /app
 
-# Copiar e instalar dependencias
-COPY requirements.txt .
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+# No bufferizar la salida de Python
+ENV PYTHONUNBUFFERED=1
 
-# Copiar el resto del proyecto
+# ─── Dependencias ──────────────────────────────────────────────────────────────
+COPY requirements.txt .
+RUN pip install --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt
+
+# ─── Código de la aplicación ───────────────────────────────────────────────────
 COPY . .
 
-# Exponer el puerto que FastAPI usará
-EXPOSE 8001
+# ─── Variables de entorno parametrizables ──────────────────────────────────────
+# Puerto en el que corre FastAPI (puede inyectarse desde K8s)
+ARG PORT=8001
+ENV PORT=${PORT}
 
-# Comando para iniciar el servicio
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]
+# Expone el puerto configurado
+EXPOSE ${PORT}
+
+# ─── Comando de arranque ───────────────────────────────────────────────────────
+# 📌 Si cambias la ruta al broker/MinIO, revisa las vars RABBIT_URL y MINIO_ENDPOINT
+ENTRYPOINT ["sh","-c"]
+CMD ["uvicorn main:app --host 0.0.0.0 --port $PORT"]

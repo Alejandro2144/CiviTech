@@ -1,11 +1,23 @@
+# ─── Base image ─────────────────────────────────────────────────────────
 FROM python:3.11-slim
 
-WORKDIR /worker
+# ─── Directorio de trabajo ─────────────────────────────────────────────
+WORKDIR /app
+ENV PYTHONUNBUFFERED=1
 
-COPY requirements.txt ./
+# ─── Instalación de dependencias ───────────────────────────────────────
+COPY requirements.txt .
+RUN pip install --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt
 
-RUN pip install --no-cache-dir -r requirements.txt
+# ─── Código del worker ─────────────────────────────────────────────────
+COPY . .
 
-COPY . /worker
+# ─── Variables externas ────────────────────────────────────────────────
+# 📌 Ajusta estas URLs si tus servicios corren en otro host/puerto
+ENV RABBIT_URL=amqp://localhost
+ENV MINIO_ENDPOINT=http://localhost:9000
 
+# ─── Comando de arranque ───────────────────────────────────────────────
+# 📌 Cambia "worker.py" al script que inicia tu listener si usa otro nombre
 CMD ["python", "worker.py"]

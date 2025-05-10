@@ -1,18 +1,24 @@
-# Imagen base oficial de Python
+# ─── Base image ─────────────────────────────────────────────────────────
 FROM python:3.11-slim
 
-# Establecer el directorio de trabajo dentro del contenedor
+# ─── Workdir ────────────────────────────────────────────────────────────
 WORKDIR /app
+ENV PYTHONUNBUFFERED=1
 
-# Copiar e instalar dependencias
+# ─── Dependencies ───────────────────────────────────────────────────────
 COPY requirements.txt .
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt
 
-# Copiar el resto del proyecto
+# ─── Application code ───────────────────────────────────────────────────
 COPY . .
 
-# Exponer el puerto que FastAPI usará
-EXPOSE 8000
+# ─── Configurable port ──────────────────────────────────────────────────
+ARG PORT=8000    # 📌 Cámbialo aquí si tu FastAPI corre en otro puerto
+ENV PORT=${PORT}
+EXPOSE ${PORT}
 
-# Comando para iniciar el servicio
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# ─── Entrypoint & CMD ───────────────────────────────────────────────────
+# 📌 Si cambias la URL de Rabbit o MinIO, revisa las vars RABBIT_URL y MINIO_ENDPOINT
+ENTRYPOINT ["sh","-c"]
+CMD ["uvicorn main:app --host 0.0.0.0 --port $PORT"]
