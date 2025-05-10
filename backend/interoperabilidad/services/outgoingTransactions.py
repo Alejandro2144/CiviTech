@@ -51,7 +51,7 @@ def sendToExternalOperator(citizen, urlDocuments, transferAPIURL):
     }
     # Enviar el payload al operador externo
 
-    with httpx.Client() as client:
+    '''with httpx.Client() as client:
         try:
             client.request(
             method="POST",
@@ -67,25 +67,8 @@ def sendToExternalOperator(citizen, urlDocuments, transferAPIURL):
             return
         except Exception as e:
             print(f"Error inesperado: {e}", flush=True)
-            return
+            return'''
 
-    '''try:
-        # synchronous HTTP client
-        with httpx.Client() as client:
-            response = client.post(transferAPIURL, json=payload)
-            response.raise_for_status()
-            data = response.json()
-    except httpx.RequestError as e:
-        # network or connection error
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Error contacting upstream service: {e}"
-        )
-    except httpx.HTTPStatusError as e:
-        # non-2xx status codes
-        raise HTTPException(
-            status_code=e.response.status_code,
-            detail=f"Upstream service returned error: {e.response.text}"
-        )'''
+    print("Payload enviado al operador externo:", payload, flush=True)
     
     return payload
