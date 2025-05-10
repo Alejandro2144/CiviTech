@@ -6,7 +6,6 @@ import Toast from '@/components/ui/Toast'
 
 export default function Profile() {
   const [profile, setProfile] = useState(null)
-  const [error, setError] = useState('')
   const [showToast, setShowToast] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const navigate = useNavigate()
@@ -18,7 +17,8 @@ export default function Profile() {
         const res = await getProfile()
         setProfile(res)
       } catch (err) {
-        setError(err.message)
+        logout()
+        navigate('/login', { replace: true })
       }
     }
 
@@ -33,8 +33,7 @@ export default function Profile() {
       logout()
       setShowToast(true)
       setShowConfirm(false)
-    } catch (err) {
-      setError(err.message)
+    } catch {
       setShowConfirm(false)
     }
   }
@@ -44,19 +43,6 @@ export default function Profile() {
       <div className="bg-neutral-900 p-12 rounded-2xl shadow-2xl shadow-indigo-800/30 max-w-4xl w-full space-y-10 text-white">
 
         <h1 className="text-4xl font-bold text-center text-indigo-400">Perfil</h1>
-
-        {error && (
-          <div className="text-center space-y-4">
-            <p className="text-red-400 text-lg font-semibold">⚡ No autorizado</p>
-            <p className="text-gray-400">Tu sesión ha expirado o no tienes permisos para ver esta sección. Por favor inicia sesión nuevamente.</p>
-            <button
-              onClick={() => navigate('/login')}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-6 rounded-lg transition"
-            >
-              Iniciar sesión
-            </button>
-          </div>
-        )}
 
         {profile && (
           <div className="space-y-10">
