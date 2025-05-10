@@ -4,12 +4,13 @@ import httpx
 from aio_pika import IncomingMessage
 from rabbitConfig import get_connection, USER_QUEUE, DOC_QUEUE, ID_USER_QUEUE, UPLOAD_CONFIRM_QUEUE, NOTIFY_QUEUE
 from dotenv import load_dotenv
-from config.constants import CITIZEN_MS_URL, DOCUMENT_MS_URL, INTEROP_MS_URL
+from config.constants import CITIZEN_MS_URL, DOCUMENT_MS_URL, INTEROP_MS_URL, NOTIFICATION_MS_URL
 load_dotenv()
 
 DOCUMENT_MS_URL = os.getenv("DOCUMENT_MS_URL")
 CITIZEN_MS_URL = os.getenv("CITIZEN_MS_URL")
 INTEROP_MS_URL = os.getenv("INTEROP_MS_URL")
+NOTIFICATION_MS_URL = os.getenv("NOTIFICATION_MS_URL")
 
 async def process_user(msg: IncomingMessage):
     data = json.loads(msg.body)
@@ -28,22 +29,35 @@ async def process_docs(msg: IncomingMessage):
     urls = payload['urlDocuments']
     confirmAPI = payload['confirmAPI']
 
-    '''docs_payload = {
+    docs_payload = {
         "id": user_id,
         "urlDocuments": urls,
         "confirmAPI": confirmAPI
-    }'''
+    }
 
 
     # -> Aquí: comunicación HTTP al microservicio de documentos
     async with httpx.AsyncClient() as client:
-        await client.post(DOCUMENT_MS_URL+"/documents/recepcionInfoDocumentos",
-            json={
-                "id": user_id,
-                "urlDocuments": urls,
-                "confirmAPI": confirmAPI  # cambia si tienes una real
-            }
-        )
+
+        try:
+            await client.request(
+                method="POST",
+                url=DOCUMENT_MS_URL+"/documents/recepcionInfoDocumentos",
+                data=json.dumps(docs_payload),
+                headers={"Content-Type": "application/json"}
+            )
+        except httpx.RequestError as e:
+            print(f"Error contactando el microservicio de documentos: {e}", flush=True)
+            await msg.reject(requeue=False)
+            return
+        except httpx.HTTPStatusError as e:
+            print(f"Error en la respuesta del microservicio de documentos: {e}", flush=True)
+            await msg.reject(requeue=False)
+            return
+        except Exception as e:
+            print(f"Error inesperado: {e}", flush=True)
+            await msg.reject(requeue=False)
+            return
     
     print(f"Documentos procesados para el usuario {user_id}: {urls}", flush=True)
     
@@ -134,6 +148,37 @@ async def process_confirmation(msg: IncomingMessage):
 
 async def process_notification(msg: IncomingMessage):
     notification_payload = json.loads(msg.body)
+
+    if notification_payload["action"] == "in_file_action":
+        # -> Aquí: comunicación HTTP al microservicio ciudadano para enviarle el link
+
+        async with httpx.AsyncClient() as client:
+            try:
+                await client.request(
+                method="POST",
+                url=NOTIFICATION_MS_URL+"/sendInFileActionEmail",
+                data=json.dumps(notification_payload),
+                headers={"Content-Type": "application/json"}
+                )
+            except httpx.RequestError as e:
+                print(f"Error contactando el microservicio de notificaciones: {e}", flush=True)
+                await msg.reject(requeue=False)
+                return
+            except httpx.HTTPStatusError as e:
+                print(f"Error en la respuesta del microservicio de notificaciones: {e}", flush=True)
+                await msg.reject(requeue=False)
+                return
+            except Exception as e:
+                print(f"Error inesperado: {e}", flush=True)
+                await msg.reject(requeue=False)
+                return
+            
+
+    elif notification_payload["action"] == "set_password":
+        # -> Aquí: comunicación HTTP al microservicio ciudadano para enviarle el link
+        async with httpx.AsyncClient() as client:
+            await client.post(CITIZEN_MS_URL+"/citizens/in_file_action", json=notification_payload)
+
 
     # -> Aquí: comunicación HTTP al microservicio notificaciones para enviarle link al usuario
     '''async with httpx.AsyncClient() as client:
