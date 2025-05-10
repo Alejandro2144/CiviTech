@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, status
+from services.prepareURL import prepareURLDocuments
 from services.outgoingTransactions import *
 from services.citizenInfo import *
 from schemas import *

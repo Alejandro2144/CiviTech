@@ -10,7 +10,6 @@ export const AuthProvider = ({ children }) => {
 
   const navigate = useNavigate()
 
-  // 🔍 Verifica si el token es válido (presente y no expirado)
   const isValidToken = (jwt) => {
     try {
       const payload = JSON.parse(atob(jwt.split('.')[1]))
@@ -20,52 +19,65 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  // ✅ Login: guarda token y actualiza estado
   const login = (newToken) => {
     localStorage.setItem('token', newToken)
     setToken(newToken)
     setIsAuthenticated(true)
   }
 
-  // ❌ Logout: limpia estado y redirige
+  // ❌ Logout sin redirección automática
   const logout = () => {
     localStorage.removeItem('token')
     setToken(null)
     setIsAuthenticated(false)
-    navigate('/login')
   }
 
-  // 🌐 Escucha cambios en otras pestañas
+  // Escucha cambios entre pestañas
   useEffect(() => {
     const syncLogout = (e) => {
       if (e.key === 'token' && e.newValue === null) {
         logout()
+        navigate('/login') // Redirige solo si es un logout externo
       }
     }
     window.addEventListener('storage', syncLogout)
     return () => window.removeEventListener('storage', syncLogout)
   }, [])
 
-  // 🚀 Al cargar, verifica si hay token y si es válido
+  // Verifica token en el primer render
   useEffect(() => {
     const storedToken = localStorage.getItem('token')
+    const currentPath = window.location.pathname
+
     if (storedToken && isValidToken(storedToken)) {
       setToken(storedToken)
       setIsAuthenticated(true)
     } else {
       logout()
+
+      // 🔓 Excepciones: rutas públicas que no requieren autenticación
+      const publicPaths = ['/set-password']
+      const isPublic = publicPaths.some((path) => currentPath.startsWith(path))
+
+      if (!isPublic) {
+        navigate('/login')
+      }
     }
+
     setLoading(false)
   }, [])
 
-  // ⏱ Revisa si el token expira mientras está logueado
+  // Chequeo periódico de expiración
   useEffect(() => {
     if (!token) return
+
     const interval = setInterval(() => {
       if (!isValidToken(token)) {
         logout()
+        navigate('/login')
       }
-    }, 60 * 1000) // cada 60 segundos
+    }, 60 * 1000)
+
     return () => clearInterval(interval)
   }, [token])
 

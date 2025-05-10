@@ -76,7 +76,7 @@ services:
       - AUTH_MS_URL=http://autenticacion:8000
       - DOCUMENT_MS_URL=http://documentos:8002
     ports:
-      - "8003:8003"   # <== Cambiado el puerto para evitar conflicto
+      - "8004:8000"  
     restart: unless-stopped
 
   listener_worker:
@@ -91,6 +91,16 @@ services:
       - RABBIT_URL=amqp://rabbitmq:5672
       - MINIO_ENDPOINT=http://minio:9000
     restart: unless-stopped
+
+  notificaciones:
+      build: ./backend/notificaciones
+      container_name: notificaciones
+      ports:
+        - "8003:8003"
+      env_file:
+        - ./backend/notificaciones/.env
+      depends_on:
+        - rabbitmq
 
 volumes:
   rabbitmq-data:

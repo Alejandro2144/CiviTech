@@ -4,15 +4,16 @@ from utils.rabbit import get_connection
 
 NOTIFY_QUEUE = "notify_citizen"  # Nombre de la cola donde interoperabilidad escucha confirmaciones
 
-async def publish_notification_message(id_citizen: str, confirm_api: str, status: str = "1"):
+async def publish_notification_message(CitizenName: str, CitizenEmail: str, fileAction: str, fileName: str):
     """
     Publica un mensaje de confirmación en la cola de transferencias confirmadas.
     """
     notification_payload = {
+        "citizenName": CitizenName,
         "action": "in_file_action",
-        "citizenEmail": citizenEmail,
-        "req_status": status,
-        "confirmAPI": confirm_api
+        "citizenEmail": CitizenEmail,
+        "fileName": fileName,
+        "fileAction": fileAction,
     }
 
     print(f"[DEBUG] Publicando confirmación: {notification_payload}")

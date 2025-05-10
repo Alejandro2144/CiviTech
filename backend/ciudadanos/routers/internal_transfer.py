@@ -45,10 +45,11 @@ async def receive_citizen(citizen: CitizenBase, db: Session = Depends(get_db)):
 
     url = f"{CIVITECH_BASE_URL}/set-password?token={token}"
 
+    # Enviar correo al ciudadano
+    await send_citizen_registered(citizen.name, citizen.email, url)
+
     # Notificar a interoperabilidad (para notificaciones)
 
     print(new_citizen, flush=True)
-
-    await send_citizen_registered(citizen.id, citizen.name, citizen.email, url)
 
     return {"message": "Ciudadano pre-registrado y notificado"}

@@ -141,22 +141,16 @@ async def process_confirmation(msg: IncomingMessage):
     
     await msg.ack()
 
-    
-
-
-
-
 async def process_notification(msg: IncomingMessage):
     notification_payload = json.loads(msg.body)
-
+    print(f"Payload recibido: {notification_payload}", flush=True)
     if notification_payload["action"] == "in_file_action":
-        # -> Aquí: comunicación HTTP al microservicio ciudadano para enviarle el link
 
         async with httpx.AsyncClient() as client:
             try:
                 await client.request(
                 method="POST",
-                url=NOTIFICATION_MS_URL+"/sendInFileActionEmail",
+                url=NOTIFICATION_MS_URL+"sendInFileActionEmail",
                 data=json.dumps(notification_payload),
                 headers={"Content-Type": "application/json"}
                 )
@@ -175,16 +169,35 @@ async def process_notification(msg: IncomingMessage):
             
 
     elif notification_payload["action"] == "set_password":
+        print("Ingresa al elif", flush=True)
         # -> Aquí: comunicación HTTP al microservicio ciudadano para enviarle el link
         async with httpx.AsyncClient() as client:
-            await client.post(CITIZEN_MS_URL+"/citizens/in_file_action", json=notification_payload)
+            try:
+                await client.request(
+                method="POST",
+                url=NOTIFICATION_MS_URL+"sendPasswordSetEmail",
+                data=json.dumps(notification_payload),
+                headers={"Content-Type": "application/json"}
+                )
+            except httpx.RequestError as e:
+                print(f"Error contactando el microservicio de notificaciones: {e}", flush=True)
+                await msg.reject(requeue=False)
+                return
+            except httpx.HTTPStatusError as e:
+                print(f"Error en la respuesta del microservicio de notificaciones: {e}", flush=True)
+                await msg.reject(requeue=False)
+                return
+            except Exception as e:
+                print(f"Error inesperado: {e}", flush=True)
+                await msg.reject(requeue=False)
+                return
 
 
     # -> Aquí: comunicación HTTP al microservicio notificaciones para enviarle link al usuario
     '''async with httpx.AsyncClient() as client:
         await client.post(INTEROP_MS_URL, json=notification_payload)'''
 
-    print(f"Enlace recibido: {notification_payload['set_password_url']}", flush=True)
+    #print(f"Enlace recibido: {notification_payload['set_password_url']}", flush=True)
     
     await msg.ack()
 

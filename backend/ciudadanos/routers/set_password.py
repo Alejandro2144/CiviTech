@@ -35,6 +35,6 @@ async def set_password(data: SetPasswordRequest, db: Session = Depends(get_db)):
     db.commit()
 
     # Generar token de acceso
-    access_token = await get_token(citizen.id, citizen.email)
+    access_token = await get_token(citizen.id, citizen.name, citizen.email)
 
     return SetPasswordResponse(access_token=access_token)

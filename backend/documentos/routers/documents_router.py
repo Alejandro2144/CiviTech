@@ -8,6 +8,8 @@ from services.document_service import generate_signed_url
 from services.document_service import delete_document
 from services.document_service import delete_folder_by_citizen
 from services.transfer_service import process_transfer_message
+from utils.dependencies import get_current_user
+from fastapi import Depends
 
 router = APIRouter(
     prefix="/documents",
@@ -22,7 +24,8 @@ async def upload_document_endpoint(
     documentType: Optional[str] = Form("document"),
     isCertified: Optional[bool] = Form(False),
     accessControlList: Optional[str] = Form(None),
-    forceUpdate: bool = Form(default=False)
+    forceUpdate: bool = Form(default=False),
+    currentUser: dict = Depends(get_current_user) 
 ):
     """
     Sube un documento a GovCarpeta y lo autentica.
@@ -48,7 +51,7 @@ async def upload_document_endpoint(
     )
 
     # Subir documento y manejar todo el flujo
-    response = await upload_document(file_content, file.filename, metadata,force_update=forceUpdate)
+    response = await upload_document(file_content, file.filename, metadata, currentUser,force_update=forceUpdate)
 
     return response
 
@@ -80,11 +83,11 @@ async def download_document(object_name: str):
     return {"downloadUrl": download_url}
 
 @router.delete("/delete/{object_name}")
-async def delete_document_endpoint(object_name: str):
+async def delete_document_endpoint(object_name: str, currentUser: dict = Depends(get_current_user)):
     """
     Elimina un documento específico del bucket.
     """
-    response = await delete_document(object_name)
+    response = await delete_document(object_name, currentUser)
     return response
 
 @router.delete("/delete/folder/{idCitizen}")
