@@ -7,6 +7,6 @@ def get_minio_client():
         endpoint=os.getenv("MINIO_ENDPOINT", "minio:9000"),
         access_key=os.getenv("MINIO_ACCESS_KEY", "admin"),
         secret_key=os.getenv("MINIO_SECRET_KEY", "admin123"),
-        secure=False  # En local trabajamos sin HTTPS
+        secure=False 
     )
     return client
